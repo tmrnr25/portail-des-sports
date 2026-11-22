@@ -54,12 +54,18 @@ const maxT = Math.max(1, ...top.map((x) => x.s.titles));
     <div class="wrap">
       <h2>Tournois</h2>
       <p class="sub">Classés comme dans ta base Notion.</p>
+      <div class="tools">
+        <input type="search" id="qt" placeholder="Chercher un tournoi ou une ville" aria-label="Chercher un tournoi ou une ville" />
+        <span class="count" id="ct">{competitions.length} tournois</span>
+      </div>
+      <p class="empty" id="nt" hidden>Aucun tournoi ne correspond.</p>
       {groups.map((g) => (
         <>
+          <div class="tgroup">
           <h3 style="font-size:24px;margin:22px 0 12px">{g.title}</h3>
           <div class="grid">
             {g.items.map((c) => (
-              <a class="card" href={url.comp(c)}>
+              <a class="card" href={url.comp(c)} data-s={`${c.name} ${c.city || ""} ${c.zone?.name || ""}`.toLowerCase()}>
                 <div class="pic" style={`background:${surf(c.surface).color}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
                 <div class="body">
                   <h3>{c.name}</h3>
@@ -68,8 +74,25 @@ const maxT = Math.max(1, ...top.map((x) => x.s.titles));
               </a>
             ))}
           </div>
+          </div>
         </>
       ))}
     </div>
   </section>
+  <script is:inline>
+    {
+      const q = document.getElementById("qt"), ct = document.getElementById("ct"), none = document.getElementById("nt");
+      const groups = [...document.querySelectorAll(".tgroup")];
+      const norm = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      q.addEventListener("input", () => {
+        const t = norm(q.value.trim()); let n = 0;
+        for (const g of groups) {
+          let k = 0;
+          for (const a of g.querySelectorAll("a.card")) { const ok = !t || norm(a.dataset.s).includes(t); a.hidden = !ok; if (ok) k++; }
+          g.hidden = k === 0; n += k;
+        }
+        ct.textContent = `${n} tournoi${n > 1 ? "s" : ""}`; none.hidden = n > 0;
+      });
+    }
+  </script>
 </Base>

@@ -24,6 +24,17 @@ const decades = Object.keys(dec).sort().map((d) => {
 });
 const S = surf(c.surface);
 const cityLines = (c.city || "").split("\n").map((s) => s.trim()).filter(Boolean);
+// Colonnes du tableau : on ne garde que les tours renseignés au moins une fois
+const COLS = [["v", "Vainqueur"], ["f", "Finaliste"], ["sf", "Demi-finalistes"], ["qf", "Quart-de-finalistes"]].filter(([k]) => k === "v" || eds.some((e) => e[k].length));
+// Historique des surfaces (d'après la surface de chaque édition)
+const surfRuns = [];
+eds.slice().reverse().forEach((e) => {
+  const sf = e.surface || c.surface; if (!sf) return;
+  const last = surfRuns.at(-1);
+  if (last && last.s === sf) last.to = e.year; else surfRuns.push({ s: sf, from: e.year, to: e.year });
+});
+const surfHistory = surfRuns.length > 1 ? surfRuns.slice().reverse().map((r, i) => (i === 0 ? `Depuis ${r.from} : ${surf(r.s).label}` : r.from === r.to ? `${r.from} : ${surf(r.s).label}` : `${r.from}-${r.to} : ${surf(r.s).label}`)) : [];
+const surfChanged = surfRuns.length > 1;
 const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) => P(id).name)].join(" | ").toLowerCase();
 ---
 <Base title={c.name} nav="tournois" description={`Palmarès et éditions de ${c.name}.`}>
@@ -41,7 +52,8 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) =>
           {c.created && <span>Créé en {c.created}</span>}
           {c.disappeared && <span>Disparu en {c.disappeared}</span>}
         </div>
-        {cityLines.length > 1 && <p style="font-size:14px">{cityLines.slice(1).join(" · ")}</p>}
+        {cityLines.length > 1 && <p style="font-size:14px">Lieu : {cityLines.slice(1).join(" · ")}</p>}
+        {surfHistory.length > 0 && <p style="font-size:14px">Surface : {surfHistory.join(" · ")}</p>}
       </div>
       {best && (
         <div class="record">
@@ -98,12 +110,13 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) =>
         <span class="count" id="count">{plural(eds.length, "édition")}</span>
       </div>
       <table class="stack" id="eds">
-        <thead><tr><th>Année</th><th>Vainqueur</th><th>Finaliste</th><th>Demi-finalistes</th><th>Quart-de-finalistes</th></tr></thead>
+        <thead><tr><th>Année</th>{surfChanged && <th>Surface</th>}{COLS.map(([, l]) => <th>{l}</th>)}</tr></thead>
         <tbody>
           {eds.map((e) => (
             <tr data-s={search(e)}>
               <td class="y"><a href={url.edition(e)}>{e.year}</a></td>
-              {[e.v, e.f, e.sf, e.qf].map((ids) => <td>{ids.map((id, i) => <>{i > 0 && <br />}<a href={url.player(P(id))}>{P(id).name}</a></>)}</td>)}
+              {surfChanged && <td><span class="chip"><i class="dot" style={`background:${surf(e.surface || c.surface).color}`}></i>{surf(e.surface || c.surface).label}</span></td>}
+              {COLS.map(([k]) => <td>{e[k].map((id, i) => <>{i > 0 && <br />}<a href={url.player(P(id))}>{P(id).name}</a></>)}</td>)}
             </tr>
           ))}
         </tbody>

@@ -10,6 +10,7 @@
 --court:#1e5b3f;--terre:#c8642c;--gazon:#3f8f3a;--dur:#2d5fb8;--indoor:#7d63b8;--moquette:#7b7f86;
 --nuit:#14213d;--or:#e0a526;--or-ink:light-dark(#9a6a0c,#f0c05a);--argent:#9aa7bd;--bronze:#c4835a;--qf:light-dark(#d8deea,#34405c)}
 *{box-sizing:border-box;min-width:0}
+[hidden]{display:none !important}
 html{scroll-padding-top:72px}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-family:"Barlow Condensed",Barlow,sans-serif;line-height:1.05;margin:0;text-wrap:balance}
@@ -100,7 +101,7 @@ mark{background:#f6c9a8;color:inherit;border-radius:3px;padding:0 2px}
 .empty{padding:24px;text-align:center;color:var(--mute)}
 
 /* tableau final */
-.draw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:center}
+.draw{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:14px;align-items:center}
 .draw .col{display:grid;gap:10px}
 .draw h3{font:600 13px Barlow,sans-serif;color:var(--mute)}
 .slot{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center}

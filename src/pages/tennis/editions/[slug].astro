@@ -11,7 +11,7 @@ const i = list.indexOf(e);
 const prev = list[i + 1], next = list[i - 1];
 const S = surf(e.surface || c.surface);
 const P = (id) => playerById.get(id);
-const cols = [["Quarts de finale", e.qf, false], ["Demi-finales", e.sf, false], ["Finale", e.f, false], ["Vainqueur", e.v, true]];
+const cols = [["Quarts de finale", e.qf, false], ["Demi-finales", e.sf, false], ["Finale", e.f, false], ["Vainqueur", e.v, true]].filter(([, ids, win]) => win || ids.length > 0);
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
 ---
 <Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
@@ -34,8 +34,8 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
   <section class="band">
     <div class="wrap">
       <h2>Tableau final</h2>
-      <p class="sub">Des quarts au titre. Chaque nom ouvre la fiche du joueur.</p>
-      <div class="draw">
+      <p class="sub">{e.qf.length ? "Des quarts au titre." : e.sf.length ? "Des demi-finales au titre." : "La finale."} Chaque nom ouvre la fiche du joueur.</p>
+      <div class="draw" style={`--cols:${cols.length}`}>
         {cols.map(([title, ids, win]) => (
           <div class="col">
             <h3>{title}</h3>
