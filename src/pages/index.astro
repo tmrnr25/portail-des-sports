@@ -1,0 +1,38 @@
+---
+import Base from "../layouts/Base.astro";
+import { competitions, editions, players } from "../lib/tennis.js";
+const sports = [
+  { name: "Tennis", href: "/tennis/", color: "var(--court)", line: `${competitions.length} tournois · ${editions.length} éditions · ${players.length} joueurs` },
+  { name: "Football", color: "#24476b", line: "Bientôt" },
+  { name: "Cyclisme", color: "#b8452a", line: "Bientôt" },
+  { name: "Formule 1", color: "#8c1d24", line: "Bientôt" },
+];
+---
+<Base title="Accueil" nav="accueil">
+  <header class="band hero noart">
+    <div class="wrap">
+      <div>
+        <div class="crumb">Portail des sports</div>
+        <h1>Portail des sports</h1>
+        <p>Compétitions, éditions et athlètes, tirés d'une base Notion et reliés entre eux. On commence par le tennis.</p>
+      </div>
+    </div>
+  </header>
+  <section class="band">
+    <div class="wrap">
+      <h2>Choisir un sport</h2>
+      <p class="sub">Les autres sports arriveront au fur et à mesure.</p>
+      <div class="grid">
+        {sports.map((s) => {
+          const inner = (
+            <>
+              <div class="pic" style={`background:${s.color}`}>{s.name}</div>
+              <div class="body"><h3>{s.name}</h3><small>{s.line}</small></div>
+            </>
+          );
+          return s.href ? <a class="card" href={s.href}>{inner}</a> : <div class="card" style="opacity:.6">{inner}</div>;
+        })}
+      </div>
+    </div>
+  </section>
+</Base>

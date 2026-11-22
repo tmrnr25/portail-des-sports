@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+src/data/
+public/images/
+rapport-donnees.txt
+.env

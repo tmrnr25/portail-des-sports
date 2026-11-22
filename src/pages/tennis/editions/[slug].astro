@@ -1,0 +1,58 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
+export function getStaticPaths() {
+  return editions.map((e) => ({ params: { slug: e.slug }, props: { e } }));
+}
+const { e } = Astro.props;
+const c = compById.get(e.compId);
+const list = editionsByComp.get(c.id);
+const i = list.indexOf(e);
+const prev = list[i + 1], next = list[i - 1];
+const S = surf(e.surface || c.surface);
+const P = (id) => playerById.get(id);
+const cols = [["Quarts de finale", e.qf, false], ["Demi-finales", e.sf, false], ["Finale", e.f, false], ["Vainqueur", e.v, true]];
+const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
+---
+<Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
+  <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${S.color} 85%,#fff),color-mix(in srgb,${S.color} 85%,#000))`}>
+    <div class="wrap">
+      <div class="art">{c.logo ? <img src={c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
+      <div>
+        <div class="crumb"><a href="/tennis/">Tennis</a> › <a href={url.comp(c)}>{c.name}</a> › {e.year}</div>
+        <h1>{c.name} {e.year}</h1>
+        {dates && <p>{dates}.</p>}
+        <div class="tags">
+          <span>{S.label}</span>
+          {e.category && <span>{catLabel(e.category)}</span>}
+          {e.name !== c.name && <span>Nom cette année-là : {e.name}</span>}
+          <a href={url.comp(c)}>Toutes les éditions</a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <section class="band">
+    <div class="wrap">
+      <h2>Tableau final</h2>
+      <p class="sub">Des quarts au titre. Chaque nom ouvre la fiche du joueur.</p>
+      <div class="draw">
+        {cols.map(([title, ids, win]) => (
+          <div class="col">
+            <h3>{title}</h3>
+            {ids.length === 0 && <div class="slot muted">Non renseigné</div>}
+            {ids.map((id) => (
+              <div class={`slot${win ? " win" : ""}`}>
+                <span class="mini">{P(id).photo ? <img src={P(id).photo} alt="" loading="lazy" /> : initials(P(id).name)}</span>
+                <a href={url.player(P(id))}>{P(id).name}</a>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <nav class="pager" aria-label="Éditions voisines">
+        {prev ? <a href={url.edition(prev)}>‹ Édition {prev.year}</a> : <span></span>}
+        {next && <a href={url.edition(next)}>Édition {next.year} ›</a>}
+      </nav>
+    </div>
+  </section>
+</Base>

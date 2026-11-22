@@ -1,0 +1,20 @@
+{
+  "name": "portail-des-sports",
+  "version": "1.0.0",
+  "scripts": {
+    "donnees": "node scripts/fetch-notion.mjs",
+    "dev": "astro dev",
+    "build": "node scripts/fetch-notion.mjs && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.31.1",
+    "astro": "^5.18.2",
+    "sharp": "^0.35.5"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}

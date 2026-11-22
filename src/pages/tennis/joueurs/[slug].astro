@@ -1,0 +1,159 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural } from "../../../lib/tennis.js";
+export function getStaticPaths() {
+  return players.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+const { p } = Astro.props;
+const s = statsById.get(p.id);
+const res = s.results.slice().sort((a, b) => (b.e.start || `${b.e.year}`).localeCompare(a.e.start || `${a.e.year}`));
+const V = res.filter((x) => x.r === "V").map((x) => x.e);
+// grille Grand Chelem
+const gsRes = res.filter((x) => isGC(x.e) && slams.some((c) => c.id === x.e.compId));
+const gsYears = gsRes.map((x) => x.e.year);
+const years = [];
+if (gsYears.length) for (let y = Math.min(...gsYears); y <= Math.max(...gsYears); y++) years.push(y);
+const gsCell = (c, y) => gsRes.find((x) => x.e.compId === c.id && x.e.year === y);
+const AB = { V: "V", F: "F", SF: "½", QF: "¼" };
+// surfaces
+const bySurf = {};
+V.forEach((e) => { const k = e.surface || compById.get(e.compId).surface || "?"; bySurf[k] = (bySurf[k] || 0) + 1; });
+const surfKeys = Object.keys(bySurf).sort((a, b) => bySurf[b] - bySurf[a]);
+const smax = Math.max(1, ...Object.values(bySurf));
+// saisons
+const allY = res.map((x) => x.e.year);
+const seasons = [];
+if (allY.length) for (let y = Math.min(...allY); y <= Math.max(...allY); y++) seasons.push(y);
+const ty = (y) => V.filter((e) => e.year === y).length;
+const tmax = Math.max(1, ...seasons.map(ty));
+const cats = [...new Set(res.map((x) => x.e.category).filter(Boolean))];
+const kpis = [
+  [s.titles, s.titles > 1 ? "titres" : "titre", "gold"],
+  [s.gc, "Grands Chelems", "gold"],
+  [s.m1000, "Masters 1000", ""],
+  [s.finals, "ATP Finals", ""],
+  [s.jo, "or olympique", ""],
+  [s.lostFinals, "finales perdues", ""],
+].filter(([n], i) => i < 2 || n > 0);
+---
+<Base title={p.name} nav="joueurs" description={`Palmarès de ${p.name}.`}>
+  <header class="band hero" style="background:var(--nuit)">
+    <div class="wrap">
+      <div class="art round">{p.photo ? <img src={p.photo} alt={`Photo de ${p.name}`} /> : initials(p.name)}</div>
+      <div>
+        <div class="crumb"><a href="/tennis/">Tennis</a> › <a href={url.players}>Joueurs</a> › {p.name}</div>
+        <h1>{p.name}</h1>
+        <div class="tags">
+          {p.nat && <span>{p.nat.emoji} {p.nat.name}</span>}
+          {p.best && <span>Meilleur classement : n° {p.best}</span>}
+          <span>{p.retired ? "Retraité" : "En activité"}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="band">
+    <div class="wrap kpis">
+      {kpis.map(([n, l, cl]) => <div class={`kpi ${cl}`}><b>{n}</b><span>{l}</span></div>)}
+    </div>
+  </section>
+
+  {years.length > 0 && (
+    <section class="band flush">
+      <div class="wrap">
+        <h2>Grands Chelems, année par année</h2>
+        <p class="sub">Le tour atteint, à partir des quarts. Chaque case ouvre l'édition.</p>
+        <div class="legend"><span><i style="background:var(--or)"></i>Titre</span><span><i style="background:var(--argent)"></i>Finale</span><span><i style="background:var(--bronze)"></i>Demi-finale</span><span><i style="background:var(--qf)"></i>Quart de finale</span></div>
+        <div class="gs">
+          <table>
+            <thead><tr><th></th>{years.map((y) => <th>{String(y).slice(2)}</th>)}</tr></thead>
+            <tbody>
+              {slams.map((c) => (
+                <tr>
+                  <th class="slam"><a href={url.comp(c)}>{c.name}</a></th>
+                  {years.map((y) => { const x = gsCell(c, y); return x ? <td class={x.r}><a href={url.edition(x.e)} title={`${c.name} ${y} : ${ROLES[x.r]}`}>{AB[x.r]}</a></td> : <td></td>; })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {V.length > 0 && (
+    <section class="band flush">
+      <div class="wrap cols wide">
+        <div>
+          <h2>Titres par surface</h2>
+          <p class="sub">Selon la surface de chaque édition.</p>
+          <div class="rows">
+            {surfKeys.map((k) => <div class="r"><span>{surf(k).label}</span><div class="bar"><i style={`width:${(bySurf[k] / smax) * 100}%;background:${surf(k).color}`}></i></div><b>{bySurf[k]}</b></div>)}
+          </div>
+        </div>
+        <div>
+          <h2>Titres par saison</h2>
+          <p class="sub">En or, les saisons avec au moins un Grand Chelem.</p>
+          <div class="yrs">
+            {seasons.map((y) => { const n = ty(y); const g = V.some((e) => e.year === y && isGC(e)); return <div title={`${y} : ${plural(n, "titre")}`}><span>{n || ""}</span><i class={g ? "g" : ""} style={`height:${(n / tmax) * 85}%`}></i></div>; })}
+          </div>
+          <div class="yl">{seasons.map((y) => <span>{y % 5 === 0 || y === seasons[0] || y === seasons.at(-1) ? String(y).slice(2) : ""}</span>)}</div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="band flush">
+    <div class="wrap">
+      <h2>Tous ses résultats</h2>
+      <p class="sub">Chaque tournoi où il a atteint au moins les quarts de finale.</p>
+      {res.length === 0 ? <p class="muted">Aucun résultat relié dans la base.</p> : (
+        <>
+          <div class="tools">
+            <div class="seg" id="seg">
+              <button data-r="all" aria-pressed="true">Tout</button>
+              <button data-r="V" aria-pressed="false">Titres</button>
+              <button data-r="F" aria-pressed="false">Finales</button>
+              <button data-r="SF" aria-pressed="false">Demies</button>
+              <button data-r="QF" aria-pressed="false">Quarts</button>
+            </div>
+            <select id="cat" aria-label="Catégorie"><option value="all">Toutes catégories</option>{cats.map((c) => <option value={c}>{catLabel(c)}</option>)}</select>
+            <span class="count" id="count">{plural(res.length, "résultat")}</span>
+          </div>
+          <table class="stack" id="res">
+            <thead><tr><th>Année</th><th>Tournoi</th><th>Catégorie</th><th>Surface</th><th>Résultat</th><th>Vainqueur</th></tr></thead>
+            <tbody>
+              {res.map(({ e, r }) => { const c = compById.get(e.compId); const S = surf(e.surface || c.surface); return (
+                <tr data-r={r} data-c={e.category || ""}>
+                  <td class="y"><a href={url.edition(e)}>{e.year}</a></td>
+                  <td><a href={url.comp(c)}>{c.name}</a>{e.name !== c.name && <><br /><small class="muted">{e.name}</small></>}</td>
+                  <td>{catLabel(e.category)}</td>
+                  <td><span class="chip"><i class="dot" style={`background:${S.color}`}></i>{S.label}</span></td>
+                  <td><span class={`pill ${r}`}>{ROLES[r]}</span></td>
+                  <td>{r === "V" ? <span class="muted">—</span> : e.v.map((id, i) => <>{i > 0 && ", "}<a href={url.player(playerById.get(id))}>{playerById.get(id).name}</a></>)}</td>
+                </tr>
+              ); })}
+            </tbody>
+          </table>
+          <p class="empty" id="none" hidden>Aucun résultat pour ce filtre.</p>
+        </>
+      )}
+    </div>
+  </section>
+  <script is:inline>
+    {
+      const seg = document.getElementById("seg");
+      if (seg) {
+        const cat = document.getElementById("cat"), rows = [...document.querySelectorAll("#res tbody tr")], ct = document.getElementById("count"), none = document.getElementById("none");
+        let fr = "all";
+        const run = () => {
+          let n = 0;
+          for (const tr of rows) { const ok = (fr === "all" || tr.dataset.r === fr) && (cat.value === "all" || tr.dataset.c === cat.value); tr.hidden = !ok; if (ok) n++; }
+          ct.textContent = `${n} résultat${n > 1 ? "s" : ""}`; none.hidden = n > 0;
+        };
+        seg.addEventListener("click", (ev) => { const b = ev.target.closest("button"); if (!b) return; fr = b.dataset.r; seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); run(); });
+        cat.addEventListener("change", run);
+      }
+    }
+  </script>
+</Base>

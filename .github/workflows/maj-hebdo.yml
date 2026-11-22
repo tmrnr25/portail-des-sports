@@ -1,0 +1,19 @@
+# Relance la construction du site sur Cloudflare chaque semaine,
+# pour récupérer les dernières modifications de Notion.
+name: Mise à jour hebdomadaire
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # chaque lundi à 3 h UTC (4 h ou 5 h à Paris)
+  workflow_dispatch: {}    # bouton « Run workflow » pour lancer à la main
+
+jobs:
+  reconstruire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déclencher la construction Cloudflare
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "Secret CLOUDFLARE_DEPLOY_HOOK manquant"; exit 1; fi
+          curl -fsS -X POST "$HOOK"

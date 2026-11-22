@@ -1,0 +1,39 @@
+---
+import "../styles/global.css";
+import { dataDate, meta } from "../lib/tennis.js";
+interface Props { title: string; description?: string; nav?: "accueil" | "tennis" | "tournois" | "joueurs" }
+const { title, description = "Tournois, éditions et joueurs, reliés entre eux.", nav } = Astro.props;
+const cur = (k) => (nav === k ? "page" : undefined);
+---
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{title} · Portail des sports</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%23d8ef3c'/><path d='M5 9c6 4 6 10 0 14M27 9c-6 4-6 10 0 14' stroke='%23fff' stroke-width='2' fill='none'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <nav class="top" aria-label="Navigation principale">
+    <div class="wrap">
+      <a class="brand" href="/" aria-current={cur("accueil")}>Portail des sports</a>
+      <a href="/tennis/" aria-current={cur("tennis")}>Tennis</a>
+      <a href="/tennis/#tournois" aria-current={cur("tournois")}>Tournois</a>
+      <a href="/tennis/joueurs/" aria-current={cur("joueurs")}>Joueurs</a>
+    </div>
+  </nav>
+  <main><slot /></main>
+  <footer class="band site"><div class="wrap">Données issues de la base Notion « Portail des sports », mises à jour le {dataDate}.{meta.source !== "notion" && " (Données d'exemple : la clé Notion n'est pas encore branchée.)"}</div></footer>
+  <script is:inline>
+    // Étiquettes des cellules pour l'affichage des tableaux sur téléphone
+    for (const t of document.querySelectorAll("table.stack")) {
+      const heads = [...t.querySelectorAll("thead th")].map((th) => th.textContent);
+      for (const tr of t.querySelectorAll("tbody tr")) [...tr.children].forEach((td, i) => td.dataset.l = heads[i] || "");
+    }
+  </script>
+</body>
+</html>
