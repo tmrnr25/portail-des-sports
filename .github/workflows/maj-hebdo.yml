@@ -3,9 +3,12 @@
 name: Mise à jour hebdomadaire
 
 on:
-  schedule:
-    - cron: "0 3 * * 1"   # chaque lundi à 3 h UTC (4 h ou 5 h à Paris)
-  workflow_dispatch: {}    # bouton « Run workflow » pour lancer à la main
+  # Mise à jour automatique désactivée pour l'instant.
+  # Pour l'activer chaque lundi, retirer le « # » des deux lignes suivantes
+  # et ajouter le secret CLOUDFLARE_DEPLOY_HOOK (voir README).
+  # schedule:
+  #   - cron: "0 3 * * 1"
+  workflow_dispatch: {}
 
 jobs:
   reconstruire:

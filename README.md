@@ -23,7 +23,13 @@ Le site est hébergé comme fichiers statiques sur Cloudflare Workers (réglages
 
 Chaque envoi de code sur la branche `main` reconstruit le site.
 
-## Mise à jour chaque semaine
+## Mise à jour
+
+Pour l'instant, la mise à jour se lance à la main depuis Cloudflare (Worker → Deployments → relancer la dernière construction).
+
+### Activer la mise à jour automatique chaque semaine (plus tard)
+
+0. Dans `.github/workflows/maj-hebdo.yml`, retirer le `#` devant les lignes `schedule` et `cron`.
 
 1. Dans Cloudflare : Worker `portail-des-sports` → **Settings → Builds → Deploy Hooks**, créer un hook (branche `main`) et copier son adresse.
 2. Dans GitHub : dépôt → **Settings → Secrets and variables → Actions → New repository secret**, nom `CLOUDFLARE_DEPLOY_HOOK`, valeur = l'adresse du hook.
