@@ -135,7 +135,7 @@ for (const cfg of SPORTS) {
     // Un sport illisible (base non partagée avec l'intégration, colonne renommée…) ne bloque pas le site.
     console.warn(`⚠ ${cfg.label} : lecture impossible (${err.code || ""} ${err.message || err}). Le sport sera affiché vide.`);
     ds = emptySport(cfg, "Lecture Notion impossible lors de la dernière mise à jour.");
-    ds.warnings = [`Lecture impossible : ${err.message || err}`];
+    ds.meta.errors = [`${err.code ? err.code + " – " : ""}${err.message || err}`, ...(String(err.stack || "").split("\n").slice(1, 4).map((l) => l.trim()))];
   }
   await write(cfg.key, ds);
   report.push([cfg.label, ds.warnings]);

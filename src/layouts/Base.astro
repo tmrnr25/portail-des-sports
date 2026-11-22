@@ -14,6 +14,7 @@ const cur = (k) => (active === k ? "page" : undefined);
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{title} · Portail des sports</title>
   <meta name="description" content={description} />
+  {Astro.url.pathname.startsWith("/etat") && <meta name="robots" content="noindex" />}
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%23d8ef3c'/><path d='M5 9c6 4 6 10 0 14M27 9c-6 4-6 10 0 14' stroke='%23fff' stroke-width='2' fill='none'/></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,7 +29,7 @@ const cur = (k) => (active === k ? "page" : undefined);
     </div>
   </nav>
   <main><slot /></main>
-  <footer class="band site"><div class="wrap">Données issues de la base Notion « Portail des sports », mises à jour le {dataDate}.{meta.source !== "notion" && " (Données d'exemple : la clé Notion n'est pas encore branchée.)"}</div></footer>
+  <footer class="band site"><div class="wrap">Données issues de la base Notion « Portail des sports », mises à jour le {dataDate}.{meta.source !== "notion" && " (Données d'exemple : la clé Notion n'est pas encore branchée.)"} · <a href="/etat/">État des données</a></div></footer>
   <script is:inline>
     // Étiquettes des cellules pour l'affichage des tableaux sur téléphone
     for (const t of document.querySelectorAll("table.stack")) {

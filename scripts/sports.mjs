@@ -34,6 +34,7 @@ export function stripSeason(name) {
  */
 export function buildSportDataset(cfg, raw, meta) {
   const warnings = [];
+  const errors = raw.errors || [];
   const zoneById = new Map(raw.zones.map((z) => [z.id, z]));
   const zoneOf = (ids) => { const z = (ids || []).map((id) => zoneById.get(id)).filter(Boolean)[0]; return z ? { name: z.name, emoji: z.emoji || "" } : null; };
 
@@ -86,11 +87,22 @@ export function buildSportDataset(cfg, raw, meta) {
   const referenced = new Set(editions.flatMap((e) => [...Object.values(e.pos).flat(), ...e.awards.flatMap((a) => a.ids)]));
   for (const list of Object.values(groups)) for (const x of list) x.ref = referenced.has(x.id);
 
-  return { meta: { ...meta, generatedAt: new Date().toISOString() }, sport: cfg.key, comps, editions, groups, warnings: [...new Set(warnings)] };
+  return { meta: { ...meta, errors, read: { comps: raw.comps.length, editions: raw.editions.length, main: (raw.main || []).length, second: (raw.second || []).length }, generatedAt: new Date().toISOString() }, sport: cfg.key, comps, editions, groups, warnings: [...new Set(warnings)] };
 }
 
 /** Lit toutes les bases d'un sport via les fonctions d'accès fournies. */
-export async function readSport(cfg, { readAll, text, num, sel, multi, rel, date, file }, zones) {
+export async function readSport(cfg, { readAll: readAllRaw, text, num, sel, multi, rel, date, file }, zones) {
+  const errors = [];
+  // Chaque base est lue séparément : si l'une échoue, les autres restent affichées.
+  const readAll = async (id, label) => {
+    try { return await readAllRaw(id, label); }
+    catch (err) {
+      const msg = `${label} : ${err.code ? err.code + " – " : ""}${err.message || err}`;
+      console.warn(`⚠ Lecture impossible · ${msg}`);
+      errors.push(msg);
+      return [];
+    }
+  };
   const comps = [];
   for (const s of cfg.comps) {
     for (const pg of await readAll(s.id, `${cfg.label} · compétitions`)) {
@@ -125,5 +137,5 @@ export async function readSport(cfg, { readAll, text, num, sel, multi, rel, date
       return { id: pg.id, name: text(pg, s.name), photo: s.photo ? file(pg, s.photo) : null, nat: s.nat ? rel(pg, s.nat) : [], retired: s.retired ? !!sel(pg, s.retired) : false, info, teams: s.teams ? rel(pg, s.teams) : [] };
     });
   };
-  return { comps, editions, main: await ent("main"), second: await ent("second"), zones };
+  return { comps, editions, main: await ent("main"), second: await ent("second"), zones, errors };
 }

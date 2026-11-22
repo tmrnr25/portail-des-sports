@@ -1,0 +1,55 @@
+---
+// Page de contrôle : ce qui a été lu dans Notion lors de la dernière mise à jour.
+import Base from "../layouts/Base.astro";
+import { SPORTS, getSport } from "../lib/sport.js";
+import * as tennis from "../lib/tennis.js";
+const files = import.meta.glob("../data/*.json", { eager: true, import: "default" });
+const t = files["../data/tennis.json"];
+const rows = [
+  { label: "Tennis", meta: t?.meta || {}, counts: [["compétitions", tennis.competitions.length], ["éditions", tennis.editions.length], ["joueurs", tennis.players.length]], warnings: t?.warnings || [] },
+  ...SPORTS.map((cfg) => {
+    const d = files[`../data/${cfg.key}.json`] || {};
+    const s = getSport(cfg.key);
+    return {
+      label: cfg.label, meta: d.meta || {},
+      counts: [["compétitions", s.comps.length], ["éditions", s.editions.length], ...Object.keys(cfg.groups).map((g) => [cfg.groups[g].label.toLowerCase(), s.groups[g].length])],
+      warnings: d.warnings || [],
+    };
+  }),
+];
+const date = (iso) => (iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" }) : "—");
+---
+<Base title="État des données">
+  <header class="band hero noart" style="background:#33403a">
+    <div class="wrap"><div>
+      <div class="crumb"><a href="/">Portail des sports</a> › État des données</div>
+      <h1>État des données</h1>
+      <p>Ce qui a été lu dans Notion lors de la dernière mise à jour du site, et ce qui mérite d'être vérifié.</p>
+    </div></div>
+  </header>
+  <section class="band">
+    <div class="wrap" style="display:grid;gap:28px">
+      {rows.map((r) => (
+        <div>
+          <h2>{r.label}</h2>
+          <p class="sub">Mise à jour : {date(r.meta.generatedAt)} · Source : {r.meta.source || "—"}{r.meta.read && ` · Lignes lues dans Notion : ${r.meta.read.comps} compétitions, ${r.meta.read.editions} éditions, ${r.meta.read.main} fiches${r.meta.read.second ? ` + ${r.meta.read.second}` : ""}`}</p>
+          <div class="kpis" style="margin-bottom:14px">{r.counts.map(([l, n]) => <div class="kpi"><b>{n}</b><span>{l} affichés</span></div>)}</div>
+          {r.meta.note && <p><b>{r.meta.note}</b></p>}
+          {(r.meta.errors || []).length > 0 && (
+            <div style="border:2px solid #c0392b;border-radius:10px;padding:12px 16px;margin-bottom:12px">
+              <b>Erreurs de lecture</b>
+              <ul style="margin:6px 0 0">{r.meta.errors.map((e) => <li><code>{e}</code></li>)}</ul>
+            </div>
+          )}
+          {r.warnings.length > 0 ? (
+            <details>
+              <summary>{r.warnings.length} point{r.warnings.length > 1 ? "s" : ""} à vérifier dans Notion</summary>
+              <ul>{r.warnings.slice(0, 500).map((w) => <li>{w}</li>)}</ul>
+              {r.warnings.length > 500 && <p class="muted">… et {r.warnings.length - 500} autres.</p>}
+            </details>
+          ) : <p class="muted">Aucun point à vérifier.</p>}
+        </div>
+      ))}
+    </div>
+  </section>
+</Base>
