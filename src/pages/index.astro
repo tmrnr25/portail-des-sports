@@ -1,11 +1,14 @@
 ---
 import Base from "../layouts/Base.astro";
 import { competitions, editions, players } from "../lib/tennis.js";
+import { SPORTS, getSport } from "../lib/sport.js";
 const sports = [
   { name: "Tennis", href: "/tennis/", color: "#24476b", line: `${competitions.length} tournois · ${editions.length} éditions · ${players.length} joueurs` },
-  { name: "Football", color: "var(--court)", line: "Bientôt" },
-  { name: "Cyclisme", color: "#b8452a", line: "Bientôt" },
-  { name: "Formule 1", color: "#8c1d24", line: "Bientôt" },
+  ...SPORTS.map((cfg) => {
+    const s = getSport(cfg.key);
+    const line = s.empty ? "Données à venir" : `${s.comps.length} ${s.comps.length > 1 ? cfg.compWord.many : cfg.compWord.one} · ${s.editions.length} éditions · ` + Object.keys(cfg.groups).map((g) => `${s.groups[g].length} ${cfg.groups[g].label.toLowerCase()}`).join(" · ");
+    return { name: cfg.label, href: `/${cfg.key}/`, color: cfg.color, line };
+  }),
 ];
 ---
 <Base title="Accueil" nav="accueil">
@@ -14,14 +17,14 @@ const sports = [
       <div>
         <div class="crumb">Portail des sports</div>
         <h1>Portail des sports</h1>
-        <p>Compétitions, éditions et athlètes, tirés d'une base Notion et reliés entre eux. On commence par le tennis.</p>
+        <p>Compétitions, éditions et athlètes, tirés d'une base Notion et reliés entre eux.</p>
       </div>
     </div>
   </header>
   <section class="band">
     <div class="wrap">
       <h2>Choisir un sport</h2>
-      <p class="sub">Les autres sports arriveront au fur et à mesure.</p>
+      <p class="sub">Chaque sport se complète au fil de ta base Notion.</p>
       <div class="grid">
         {sports.map((s) => {
           const inner = (

@@ -1,0 +1,104 @@
+---
+import Base from "../../layouts/Base.astro";
+import Links from "../../components/Links.astro";
+import { SPORTS, getSport, groupComps, initials, plural, seasonLabel } from "../../lib/sport.js";
+export function getStaticPaths() {
+  return SPORTS.map((cfg) => ({ params: { sport: cfg.key } }));
+}
+const s = getSport(Astro.params.sport);
+const { cfg } = s;
+const recent = s.editions.filter((e) => Object.keys(e.pos).length).slice(0, 8);
+const firstPos = (e) => s.usedPositions([e]).filter((k) => s.groupOfPos(k) === "main");
+const groupsTop = Object.keys(cfg.groups).map((g) => {
+  const list = s.groups[g].map((x) => ({ x: { ...x, group: g }, st: s.stats.get(x.id) })).filter((y) => y.st.wins || y.st.podiums || y.st.awards.length);
+  list.sort((a, b) => b.st.wins - a.st.wins || b.st.podiums - a.st.podiums || b.st.awards.length - a.st.awards.length);
+  const awardsOnly = !list.some((y) => y.st.results.length);
+  return { g, label: cfg.groups[g].label, fem: cfg.groups[g].fem, awardsOnly, top: list.slice(0, 10) };
+});
+const val = (y, ao) => (ao ? y.st.awards.length : y.st.podiums);
+const maxW = (top, ao) => Math.max(1, ...top.map((y) => val(y, ao)));
+const cats = groupComps(s.comps);
+---
+<Base title={cfg.label} nav={cfg.key}>
+  <header class="band hero noart" style={`background:${cfg.color}`}>
+    <div class="wrap">
+      <div>
+        <div class="crumb"><a href="/">Portail des sports</a> › {cfg.label}</div>
+        <h1>{cfg.label}</h1>
+        <p>{cfg.compWord.many[0].toUpperCase() + cfg.compWord.many.slice(1)}, éditions et {Object.values(cfg.groups).map((g) => g.label.toLowerCase()).join(" et ")}, reliés entre eux.</p>
+        <div class="tags">
+          <span>{plural(s.comps.length, cfg.compWord.one, cfg.compWord.many)}</span>
+          <span>{plural(s.editions.length, "édition")}</span>
+          {Object.keys(cfg.groups).map((g) => <a href={s.url.group(g)}>{s.groups[g].length} {cfg.groups[g].label.toLowerCase()}</a>)}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {s.empty ? (
+    <section class="band"><div class="wrap"><h2>Bientôt</h2><p class="sub">Aucune édition n'est encore reliée dans Notion pour ce sport. Les pages apparaîtront dès que les données seront renseignées.</p></div></section>
+  ) : (
+    <>
+      <section class="band">
+        <div class="wrap cols">
+          <div>
+            <h2>Dernières éditions</h2>
+            <p class="sub">Les plus récentes de la base.</p>
+            <table class="stack">
+              <thead><tr><th>Édition</th><th>Vainqueur</th><th>Finaliste ou 2e</th></tr></thead>
+              <tbody>
+                {recent.map((e) => { const ks = firstPos(e); return (
+                  <tr>
+                    <td><a href={s.url.edition(e)}>{s.compById.get(e.compId).name} {seasonLabel(e)}</a></td>
+                    <td><Links s={s} ids={e.pos[ks[0]] || []} /></td>
+                    <td><Links s={s} ids={e.pos[ks[1]] || []} /></td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            {groupsTop.filter((x) => x.top.length).map(({ g, label, fem, awardsOnly, top }) => (
+              <div style="margin-bottom:28px">
+                <h2>{label} les plus {awardsOnly ? (fem ? "distinguées" : "distingués") : fem ? "titrées" : "titrés"}</h2>
+                <p class="sub">{awardsOnly ? "Nombre de distinctions individuelles." : "Victoires, puis podiums."}</p>
+                <div class="rows">
+                  {top.map(({ x, st }) => awardsOnly ? (
+                    <div class="r"><span><a href={s.url.entity(x)}>{x.name}</a></span><div class="bar"><i style={`width:${(st.awards.length / maxW(top, true)) * 100}%;background:${cfg.color}`}></i></div><b>{st.awards.length}</b></div>
+                  ) : (
+                    <div class="r"><span><a href={s.url.entity(x)}>{x.name}</a></span><div class="bar"><i style={`width:${(st.wins / maxW(top)) * 100}%;background:var(--or)`}></i><i style={`width:${((st.podiums - st.wins) / maxW(top)) * 100}%;background:light-dark(var(--nuit),#5b78c2)`}></i></div><b>{st.wins}</b></div>
+                  ))}
+                </div>
+                {!awardsOnly && <div class="legend" style="margin-top:10px"><span><i style="background:var(--or)"></i>Victoires</span><span><i style="background:light-dark(var(--nuit),#5b78c2)"></i>Autres podiums</span></div>}
+                <p><a href={s.url.group(g)}>{fem ? "Toutes" : "Tous"} les {label.toLowerCase()} ›</a></p>
+              </div>
+            ))}
+                      </div>
+        </div>
+      </section>
+
+      <section class="band flush" id="competitions">
+        <div class="wrap">
+          <h2>{cfg.compWord.many[0].toUpperCase() + cfg.compWord.many.slice(1)}</h2>
+          <p class="sub">Classées par type, comme dans ta base Notion.</p>
+          {cats.map((g) => (
+            <>
+              <h3 style="font-size:24px;margin:22px 0 12px">{g.title}</h3>
+              <div class="grid">
+                {g.items.map((c) => (
+                  <a class="card" href={s.url.comp(c)}>
+                    <div class="pic" style={`background:${cfg.color}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
+                    <div class="body">
+                      <h3>{c.name}</h3>
+                      <small>{[c.zone && `${c.zone.emoji} ${c.zone.name}`, plural((s.editionsByComp.get(c.id) || []).length, "édition")].filter(Boolean).join(" · ")}</small>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </>
+          ))}
+        </div>
+      </section>
+    </>
+  )}
+</Base>

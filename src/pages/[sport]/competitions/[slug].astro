@@ -1,0 +1,115 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Links from "../../../components/Links.astro";
+import { SPORTS, POS, getSport, initials, plural, seasonLabel } from "../../../lib/sport.js";
+export function getStaticPaths() {
+  return SPORTS.flatMap((cfg) => getSport(cfg.key).comps.map((c) => ({ params: { sport: cfg.key, slug: c.slug }, props: { c } })));
+}
+const { c } = Astro.props;
+const s = getSport(Astro.params.sport);
+const { cfg } = s;
+const eds = s.editionsByComp.get(c.id) || [];
+const cols = s.usedPositions(eds);
+const mainCols = cols.filter((k) => s.groupOfPos(k) === "main");
+const winKey = mainCols.find((k) => POS[k].win);
+const secondKey = mainCols.find((k) => k === "F" || k === "P2");
+const W = {}, F = {};
+eds.forEach((e) => { (e.pos[winKey] || []).forEach((id) => (W[id] = (W[id] || 0) + 1)); (e.pos[secondKey] || []).forEach((id) => (F[id] = (F[id] || 0) + 1)); });
+const top = Object.keys(W).sort((a, b) => W[b] - W[a] || (F[b] || 0) - (F[a] || 0)).slice(0, 10);
+const best = top[0] && s.ent.get(top[0]);
+const bestYears = best ? eds.filter((e) => (e.pos[winKey] || []).includes(best.id)).map((e) => e.year).sort((a, b) => a - b) : [];
+const mx = Math.max(1, ...top.map((id) => W[id] + (F[id] || 0)));
+const last = eds.find((e) => e.pos[winKey]?.length);
+const first = eds.at(-1);
+const awardLabels = [...new Set(eds.flatMap((e) => e.awards.map((a) => a.label)))];
+const search = (e) => [seasonLabel(e), ...Object.values(e.pos).flat().map((id) => s.ent.get(id)?.name || "")].join(" | ").toLowerCase();
+const showCols = cols.slice(0, 5);
+---
+<Base title={c.name} nav={cfg.key} description={`Palmarès et éditions : ${c.name}.`}>
+  <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${cfg.color} 85%,#fff),color-mix(in srgb,${cfg.color} 85%,#000))`}>
+    <div class="wrap">
+      <div class="art">{c.logo ? <img src={c.logoSquare || c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
+      <div>
+        <div class="crumb"><a href={s.url.home}>{cfg.label}</a> › <a href={`${s.url.home}#competitions`}>{cfg.compWord.many[0].toUpperCase() + cfg.compWord.many.slice(1)}</a> › {c.name}</div>
+        <h1>{c.name}</h1>
+        <div class="tags">
+          {c.category && c.category !== "❌" && <span>{c.category}</span>}
+          {c.place && <span>{c.place}</span>}
+          {c.zone && <span>{c.zone.emoji} {c.zone.name}</span>}
+          {c.active === "NON" && <span>Plus au calendrier</span>}
+        </div>
+      </div>
+      {best && (
+        <div class="record">
+          <small>Record de victoires</small>
+          <b>{W[best.id]}</b>
+          <a href={s.url.entity(best)}>{best.name}</a>
+          <small>{bestYears.length > 1 ? `de ${bestYears[0]} à ${bestYears.at(-1)}` : `en ${bestYears[0]}`}</small>
+        </div>
+      )}
+    </div>
+  </header>
+
+  <section class="band">
+    <div class="wrap kpis">
+      <div class="kpi"><b>{eds.length}</b><span>{eds.length > 1 ? "éditions" : "édition"}{first && ` (${seasonLabel(first)} – ${seasonLabel(eds[0])})`}</span></div>
+      <div class="kpi"><b>{Object.keys(W).length}</b><span>vainqueurs différents</span></div>
+      {last && <div class="kpi gold"><b style="font-size:24px;line-height:1.2"><Links s={s} ids={last.pos[winKey]} /></b><span>vainqueur <a href={s.url.edition(last)}>{seasonLabel(last)}</a></span></div>}
+      {secondKey && <div class="kpi"><b>{Object.keys(F).filter((id) => !W[id]).length}</b><span>{secondKey === "F" ? "finalistes" : "deuxièmes"} jamais vainqueurs</span></div>}
+    </div>
+  </section>
+
+  {top.length > 0 && (
+    <section class="band flush">
+      <div class="wrap">
+        <h2>Les plus titrés</h2>
+        <p class="sub">Victoires{secondKey && `, et ${secondKey === "F" ? "finales perdues" : "deuxièmes places"}`}.</p>
+        <div class="legend"><span><i style={`background:${cfg.color}`}></i>Victoires</span>{secondKey && <span><i style={`background:color-mix(in srgb,${cfg.color} 40%,#fff)`}></i>{secondKey === "F" ? "Finales perdues" : "Deuxièmes places"}</span>}</div>
+        <div class="rows" style="max-width:760px">
+          {top.map((id) => { const x = s.ent.get(id); return (
+            <div class="r"><span><a href={s.url.entity(x)}>{x.name}</a></span><div class="bar"><i style={`width:${(W[id] / mx) * 100}%;background:${cfg.color}`}></i><i style={`width:${((F[id] || 0) / mx) * 100}%;background:color-mix(in srgb,${cfg.color} 40%,#fff)`}></i></div><b>{W[id]}</b></div>
+          ); })}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="band flush">
+    <div class="wrap">
+      <h2>Toutes les éditions</h2>
+      <p class="sub">L'année ouvre l'édition, chaque nom sa fiche.</p>
+      {eds.length > 8 && (
+        <div class="tools">
+          <input type="search" id="q" placeholder="Chercher un nom ou une année" aria-label="Chercher un nom ou une année" />
+          <span class="count" id="count">{plural(eds.length, "édition")}</span>
+        </div>
+      )}
+      <table class="stack" id="eds">
+        <thead><tr><th>Édition</th>{showCols.map((k) => <th>{POS[k].label}</th>)}{awardLabels[0] && <th>{awardLabels[0]}</th>}</tr></thead>
+        <tbody>
+          {eds.map((e) => (
+            <tr data-s={search(e)}>
+              <td class="y"><a href={s.url.edition(e)}>{seasonLabel(e)}</a></td>
+              {showCols.map((k) => <td><Links s={s} ids={e.pos[k] || []} br /></td>)}
+              {awardLabels[0] && <td><Links s={s} ids={e.awards.find((a) => a.label === awardLabels[0])?.ids || []} br /></td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="empty" id="none" hidden>Aucune édition ne correspond.</p>
+    </div>
+  </section>
+  <script is:inline>
+    {
+      const q = document.getElementById("q");
+      if (q) {
+        const rows = [...document.querySelectorAll("#eds tbody tr")], ct = document.getElementById("count"), none = document.getElementById("none");
+        q.addEventListener("input", () => {
+          const t = q.value.trim().toLowerCase(); let n = 0;
+          for (const r of rows) { const ok = !t || r.dataset.s.includes(t); r.hidden = !ok; if (ok) n++; }
+          ct.textContent = t ? `${n} édition${n > 1 ? "s" : ""} sur ${rows.length}` : `${rows.length} éditions`; none.hidden = n > 0;
+        });
+      }
+    }
+  </script>
+</Base>

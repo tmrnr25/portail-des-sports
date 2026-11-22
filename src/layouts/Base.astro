@@ -1,9 +1,11 @@
 ---
 import "../styles/global.css";
 import { dataDate, meta } from "../lib/tennis.js";
-interface Props { title: string; description?: string; nav?: "accueil" | "tennis" | "tournois" | "joueurs" }
+import { SPORTS } from "../sports/config.js";
+interface Props { title: string; description?: string; nav?: string }
 const { title, description = "Tournois, éditions et joueurs, reliés entre eux.", nav } = Astro.props;
-const cur = (k) => (nav === k ? "page" : undefined);
+const active = ["tennis", "tournois", "joueurs"].includes(nav) ? "tennis" : nav;
+const cur = (k) => (active === k ? "page" : undefined);
 ---
 <!DOCTYPE html>
 <html lang="fr">
@@ -22,8 +24,7 @@ const cur = (k) => (nav === k ? "page" : undefined);
     <div class="wrap">
       <a class="brand" href="/" aria-current={cur("accueil")}>Portail des sports</a>
       <a href="/tennis/" aria-current={cur("tennis")}>Tennis</a>
-      <a href="/tennis/#tournois" aria-current={cur("tournois")}>Tournois</a>
-      <a href="/tennis/joueurs/" aria-current={cur("joueurs")}>Joueurs</a>
+      {SPORTS.map((sp) => <a href={`/${sp.key}/`} aria-current={cur(sp.key)}>{sp.key === "f1" ? "F1" : sp.label}</a>)}
     </div>
   </nav>
   <main><slot /></main>

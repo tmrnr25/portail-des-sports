@@ -1,0 +1,97 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { SPORTS, POS, getSport, initials, seasonLabel, frDate } from "../../../lib/sport.js";
+export function getStaticPaths() {
+  return SPORTS.flatMap((cfg) => getSport(cfg.key).editions.map((e) => ({ params: { sport: cfg.key, slug: e.slug }, props: { e } })));
+}
+const { e } = Astro.props;
+const s = getSport(Astro.params.sport);
+const { cfg } = s;
+const c = s.compById.get(e.compId);
+const list = s.editionsByComp.get(c.id);
+const i = list.indexOf(e);
+const prev = list[i + 1], next = list[i - 1];
+const keys = s.usedPositions([e]);
+const isCup = keys.some((k) => ["V", "F", "SF", "QF"].includes(k));
+const mainKeys = keys.filter((k) => s.groupOfPos(k) === "main");
+const secondKeys = keys.filter((k) => s.groupOfPos(k) === "second");
+const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
+const pic = (x) => x.photoSquare || x.photo;
+---
+<Base title={`${c.name} ${seasonLabel(e)}`} nav={cfg.key} description={`Résultats : ${c.name} ${seasonLabel(e)}.`}>
+  <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${cfg.color} 85%,#fff),color-mix(in srgb,${cfg.color} 85%,#000))`}>
+    <div class="wrap">
+      <div class="art">{c.logo ? <img src={c.logoSquare || c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
+      <div>
+        <div class="crumb"><a href={s.url.home}>{cfg.label}</a> › <a href={s.url.comp(c)}>{c.name}</a> › {seasonLabel(e)}</div>
+        <h1>{c.name} {seasonLabel(e)}</h1>
+        {dates && <p>{dates}.</p>}
+        <div class="tags">
+          {e.host && <span>Organisé en {e.host.emoji} {e.host.name}</span>}
+          {e.name && e.name !== c.name && <span>{e.name}</span>}
+          <a href={s.url.comp(c)}>Toutes les éditions</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="band">
+    <div class="wrap">
+      {keys.length === 0 && e.awards.length === 0 && <p class="muted">Aucun résultat n'est encore renseigné pour cette édition.</p>}
+      {mainKeys.length > 0 && (
+        <>
+          <h2>{isCup ? "Phase finale" : "Classement"}</h2>
+          <p class="sub">Chaque nom ouvre sa fiche.</p>
+          {isCup ? (
+            <div class="draw">
+              {["QF", "SF", "F", "V"].map((k) => (
+                <div class="col">
+                  <h3>{POS[k].col}</h3>
+                  {!(e.pos[k] || []).length && <div class="slot muted">Non renseigné</div>}
+                  {(e.pos[k] || []).map((id) => { const x = s.ent.get(id); return <div class={`slot${k === "V" ? " win" : ""}`}><span class="mini">{pic(x) ? <img src={pic(x)} alt="" loading="lazy" /> : initials(x.name)}</span><a href={s.url.entity(x)}>{x.name}</a></div>; })}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div class="rows" style="max-width:640px">
+              {mainKeys.map((k) => (
+                <div class="slot" style={POS[k].win ? "box-shadow:0 0 0 2px var(--or) inset;border-color:var(--or)" : ""}>
+                  <span class={`pill ${POS[k].cls}`} style="min-width:64px;text-align:center">{POS[k].label}</span>
+                  <span>{e.pos[k].map((id, j) => { const x = s.ent.get(id); return <>{j > 0 && ", "}<a href={s.url.entity(x)}>{x.name}</a></>; })}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      {secondKeys.length > 0 && (
+        <div style="margin-top:32px">
+          <h2>{cfg.groups.second.label}</h2>
+          <div class="rows" style="max-width:640px">
+            {secondKeys.map((k) => (
+              <div class="slot">
+                <span class={`pill ${POS[k].cls}`} style="min-width:64px;text-align:center">{POS[k].label}</span>
+                <span>{e.pos[k].map((id, j) => { const x = s.ent.get(id); return <>{j > 0 && ", "}<a href={s.url.entity(x)}>{x.name}</a></>; })}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {e.awards.length > 0 && (
+        <div style="margin-top:32px">
+          <h2>Distinctions</h2>
+          <table class="stack" style="max-width:760px">
+            <thead><tr><th>Distinction</th><th>Lauréat</th></tr></thead>
+            <tbody>
+              {e.awards.map((a) => <tr><td>{a.label}</td><td>{a.ids.map((id, j) => { const x = s.ent.get(id); return <>{j > 0 && ", "}<a href={s.url.entity(x)}>{x.name}</a></>; })}</td></tr>)}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <nav class="pager" aria-label="Éditions voisines">
+        {prev ? <a href={s.url.edition(prev)}>‹ {seasonLabel(prev)}</a> : <span></span>}
+        {next && <a href={s.url.edition(next)}>{seasonLabel(next)} ›</a>}
+      </nav>
+    </div>
+  </section>
+</Base>

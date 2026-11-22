@@ -1,0 +1,6 @@
+---
+// Liste de liens vers des fiches (équipes, joueurs, pilotes…) d'un sport
+const { s, ids = [], sep = ", ", br = false } = Astro.props;
+const items = ids.map((id) => s.ent.get(id)).filter(Boolean);
+---
+{items.map((x, i) => <>{i > 0 && (br ? <br /> : sep)}<a href={s.url.entity(x)}>{x.name}</a></>)}

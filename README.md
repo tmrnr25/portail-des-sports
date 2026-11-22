@@ -1,11 +1,11 @@
 # Portail des sports
 
-Site statique généré à partir de la base Notion « Portail des sports ».
+Site statique généré à partir de la base Notion « Portail des sports » : tennis, football, cyclisme et Formule 1.
 Chaque compétition, édition et joueur a sa page, et toutes les pages sont reliées entre elles.
 
 ## Comment ça marche
 
-1. `scripts/fetch-notion.mjs` lit les bases Notion via l'API officielle, relie les éditions aux joueurs et aux compétitions, prépare les images et écrit `src/data/tennis.json`.
+1. `scripts/fetch-notion.mjs` lit les bases Notion via l'API officielle, relie les éditions aux athlètes, équipes et compétitions, prépare les images et écrit un fichier par sport dans `src/data/`.
 2. Astro fabrique une page HTML par compétition, édition et joueur (`src/pages/`).
 3. Cloudflare héberge le résultat. Une action GitHub relance la construction chaque lundi.
 
@@ -58,4 +58,6 @@ npm run build        # avec NOTION_TOKEN=… pour les vraies données
 npm run preview
 ```
 
-Les noms des bases et des colonnes Notion utilisées sont dans `scripts/config.mjs`.
+Les noms des bases et des colonnes Notion utilisées sont dans `scripts/config.mjs` (tennis) et `src/sports/config.js` (football, cyclisme, F1). Un sport dont la lecture échoue est affiché vide sans bloquer le reste du site.
+
+Images perso des autres sports : `images-perso/<sport>/<dossier>/<slug>.png`, par ex. `images-perso/football/equipes/paris-saint-germain.png`, `images-perso/f1/pilotes/charles-leclerc.png`, `images-perso/cyclisme/competitions/tour-de-france.png`.
