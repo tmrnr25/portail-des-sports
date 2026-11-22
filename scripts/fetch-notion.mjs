@@ -17,7 +17,7 @@ const PERSO_DIR = path.join(ROOT, "images-perso"); // tes propres images, priori
 const token = process.env.NOTION_TOKEN;
 
 if (!token) {
-  if (process.env.CF_PAGES || process.env.CI) {
+  if (process.env.CF_PAGES || process.env.WORKERS_CI || process.env.CI) {
     console.error("✖ NOTION_TOKEN manquant : ajoute la clé de l'intégration Notion dans les variables d'environnement.");
     process.exit(1);
   }
