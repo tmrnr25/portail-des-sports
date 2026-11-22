@@ -16,12 +16,12 @@ const isCup = keys.some((k) => ["V", "F", "SF", "QF"].includes(k));
 const mainKeys = keys.filter((k) => s.groupOfPos(k) === "main");
 const secondKeys = keys.filter((k) => s.groupOfPos(k) === "second");
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
-const pic = (x) => x.photoSquare || x.photo;
+const pic = (x) => x.photo;
 ---
 <Base title={`${c.name} ${seasonLabel(e)}`} nav={cfg.key} description={`Résultats : ${c.name} ${seasonLabel(e)}.`}>
   <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${cfg.color} 85%,#fff),color-mix(in srgb,${cfg.color} 85%,#000))`}>
     <div class="wrap">
-      <div class="art">{c.logo ? <img src={c.logoSquare || c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
+      <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
       <div>
         <div class="crumb"><a href={s.url.home}>{cfg.label}</a> › <a href={s.url.comp(c)}>{c.name}</a> › {seasonLabel(e)}</div>
         <h1>{c.name} {seasonLabel(e)}</h1>
@@ -48,7 +48,7 @@ const pic = (x) => x.photoSquare || x.photo;
                 <div class="col">
                   <h3>{POS[k].col}</h3>
                   {!(e.pos[k] || []).length && <div class="slot muted">Non renseigné</div>}
-                  {(e.pos[k] || []).map((id) => { const x = s.ent.get(id); return <div class={`slot${k === "V" ? " win" : ""}`}><span class="mini">{pic(x) ? <img src={pic(x)} alt="" loading="lazy" /> : initials(x.name)}</span><a href={s.url.entity(x)}>{x.name}</a></div>; })}
+                  {(e.pos[k] || []).map((id) => { const x = s.ent.get(id); return <div class={`slot${k === "V" ? " win" : ""}`}><span class="mini" style={x.photoBg ? `background:${x.photoBg}` : ""}>{pic(x) ? <img src={pic(x)} alt="" loading="lazy" style={x.photoBg ? "object-fit:contain" : ""} /> : initials(x.name)}</span><a href={s.url.entity(x)}>{x.name}</a></div>; })}
                 </div>
               ))}
             </div>

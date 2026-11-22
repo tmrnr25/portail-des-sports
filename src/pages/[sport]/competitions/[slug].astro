@@ -28,7 +28,7 @@ const showCols = cols.slice(0, 5);
 <Base title={c.name} nav={cfg.key} description={`Palmarès et éditions : ${c.name}.`}>
   <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${cfg.color} 85%,#fff),color-mix(in srgb,${cfg.color} 85%,#000))`}>
     <div class="wrap">
-      <div class="art">{c.logo ? <img src={c.logoSquare || c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
+      <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
       <div>
         <div class="crumb"><a href={s.url.home}>{cfg.label}</a> › <a href={`${s.url.home}#competitions`}>{cfg.compWord.many[0].toUpperCase() + cfg.compWord.many.slice(1)}</a> › {c.name}</div>
         <h1>{c.name}</h1>

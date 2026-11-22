@@ -4,7 +4,7 @@ import { SPORTS, POS, getSport, initials, plural, seasonLabel } from "../../../l
 export function getStaticPaths() {
   return SPORTS.flatMap((cfg) => {
     const s = getSport(cfg.key);
-    return Object.entries(cfg.groups).flatMap(([g, gc]) => s.groups[g].map((x) => ({ params: { sport: cfg.key, group: gc.path, slug: x.slug }, props: { id: x.id } })));
+    return Object.entries(cfg.groups).flatMap(([g, gc]) => s.groups[g].filter((x) => s.hasPage(x)).map((x) => ({ params: { sport: cfg.key, group: gc.path, slug: x.slug }, props: { id: x.id } })));
   });
 }
 const s = getSport(Astro.params.sport);
@@ -42,7 +42,7 @@ const posLabel = (k) => POS[k].label;
 <Base title={x.name} nav={cfg.key} description={`Palmarès : ${x.name}.`}>
   <header class="band hero" style="background:var(--nuit)">
     <div class="wrap">
-      <div class={`art${gc.photoKind === "photo" ? " round" : ""}`}>{x.photo ? <img src={x.photoSquare || x.photo} alt={x.name} /> : initials(x.name)}</div>
+      <div class={`art${gc.photoKind === "photo" ? " round" : ""}`} style={x.photoBg ? `background:${x.photoBg}` : ""}>{x.photo ? <img src={x.photo} alt={x.name} /> : initials(x.name)}</div>
       <div>
         <div class="crumb"><a href={s.url.home}>{cfg.label}</a> › <a href={s.url.group(x.group)}>{gc.label}</a> › {x.name}</div>
         <h1>{x.name}</h1>
@@ -50,7 +50,7 @@ const posLabel = (k) => POS[k].label;
           {x.nat && <span>{x.nat.emoji} {x.nat.name}</span>}
           {Object.values(x.info || {}).map((v) => <span>{v}</span>)}
           {cfg.entities[x.group].retired && <span>{x.retired ? "Retraité" : "En activité"}</span>}
-          {teams.map((t) => <a href={s.url.entity(t)}>{t.name}</a>)}
+          {teams.map((t) => (s.hasPage(t) ? <a href={s.url.entity(t)}>{t.name}</a> : <span>{t.name}</span>))}
         </div>
       </div>
     </div>

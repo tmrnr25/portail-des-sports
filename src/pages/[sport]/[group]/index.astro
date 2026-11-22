@@ -45,7 +45,7 @@ const hasResults = rows.some((r) => r.st.results.length);
             <tbody>
               {rows.map(({ x, st }) => (
                 <tr data-s={`${x.name} ${x.nat?.name || ""}`.toLowerCase()} data-f={x.retired ? "retraite" : "actif"}>
-                  <td><a href={s.url.entity(x)}>{x.name}</a></td>
+                  <td>{s.hasPage(x) ? <a href={s.url.entity(x)}>{x.name}</a> : x.name}</td>
                   <td>{x.nat ? `${x.nat.emoji} ${x.nat.name}` : <span class="muted">—</span>}</td>
                   {hasResults && <td class="num">{st.wins || ""}</td>}
                   {hasResults && <td class="num">{st.podiums || ""}</td>}

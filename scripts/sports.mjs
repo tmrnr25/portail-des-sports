@@ -81,6 +81,11 @@ export function buildSportDataset(cfg, raw, meta) {
   tmp.sort((a, b) => (b.start || `${b.year}`).localeCompare(a.start || `${a.year}`) || b.year - a.year);
   const editions = tmp.map((e) => ({ ...e, slug: uniqueSlug(`${compSlug.get(e.compId)}-${e.season}`, usedE) }));
 
+  // Les fiches sans aucun résultat ni distinction n'ont pas de page (elles restent dans les listes) :
+  // cela évite des pages vides et garde le site sous la limite de 20 000 fichiers.
+  const referenced = new Set(editions.flatMap((e) => [...Object.values(e.pos).flat(), ...e.awards.flatMap((a) => a.ids)]));
+  for (const list of Object.values(groups)) for (const x of list) x.ref = referenced.has(x.id);
+
   return { meta: { ...meta, generatedAt: new Date().toISOString() }, sport: cfg.key, comps, editions, groups, warnings: [...new Set(warnings)] };
 }
 

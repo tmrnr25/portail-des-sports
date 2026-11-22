@@ -17,7 +17,7 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
 <Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
   <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${S.color} 85%,#fff),color-mix(in srgb,${S.color} 85%,#000))`}>
     <div class="wrap">
-      <div class="art">{c.logo ? <img src={c.logoSquare || c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
+      <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
       <div>
         <div class="crumb"><a href="/tennis/">Tennis</a> › <a href={url.comp(c)}>{c.name}</a> › {e.year}</div>
         <h1>{c.name} {e.year}</h1>

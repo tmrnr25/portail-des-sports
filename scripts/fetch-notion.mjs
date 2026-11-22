@@ -164,15 +164,16 @@ function sportJobs(cfg, ds) {
   return [
     ...ds.comps.map((x) => ({ item: x, key: "logo", dir: `${cfg.key}/competitions`, kind: "logo" })),
     ...Object.entries(ds.groups).flatMap(([g, list]) =>
-      list.map((x) => ({ item: x, key: "photo", dir: `${cfg.key}/${cfg.groups[g].path}`, kind: cfg.groups[g].photoKind }))),
+      list.filter((x) => x.ref !== false).map((x) => ({ item: x, key: "photo", dir: `${cfg.key}/${cfg.groups[g].path}`, kind: cfg.groups[g].photoKind }))),
   ];
 }
 
 // Priorité : images-perso/<dossier>/<slug>.(png|jpg|jpeg|webp) puis le fichier Notion.
-// Les logos sont affichés en entier : on les place dans un cadre (16:9 pour les cartes,
-// carré pour l'en-tête) dont le fond reprend la couleur du bord du logo.
+// Les logos sont affichés en entier : on les place dans un cadre 16:9 dont le fond
+// reprend la couleur du bord du logo (cette couleur est aussi gardée pour les cadres carrés).
 // Les photos sont simplement réduites. Tout est converti en WebP léger.
 async function processImages(jobs) {
+  // (les fiches sans page n'ont pas d'image : rien à télécharger)
   let ok = 0, miss = 0;
   const run = async ({ item, key, dir, kind }) => {
     const src = item[key];
@@ -194,9 +195,10 @@ async function processImages(jobs) {
       } else {
         const bg = await edgeColor(buf);
         await sharp(buf).rotate().resize(640, 360, { fit: "contain", background: bg }).flatten({ background: bg }).webp({ quality: 80 }).toFile(`${base}.webp`);
-        await sharp(buf).rotate().resize(320, 320, { fit: "contain", background: bg }).flatten({ background: bg }).webp({ quality: 80 }).toFile(`${base}-carre.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
-        item[key === "logo" ? "logoSquare" : "photoSquare"] = `/images/${dir}/${item.slug}-carre.webp`;
+        // Une seule image par logo (limite de 20 000 fichiers) : la couleur du bord sert de fond
+        // dans les cadres carrés, pour que le logo y paraisse entier et sans bandes.
+        item[key + "Bg"] = `rgb(${bg.r},${bg.g},${bg.b})`;
       }
       ok++;
     } catch { miss++; }

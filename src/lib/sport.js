@@ -50,6 +50,7 @@ export function getSport(key) {
   const s = {
     cfg, meta: d.meta, comps: d.comps, editions: d.editions, groups, ent, compById, editionsByComp, stats, url,
     isWin, isPodium, empty: d.editions.length === 0,
+    hasPage: (x) => x && x.ref !== false,
     // Positions réellement utilisées par une liste d'éditions, dans l'ordre de POS
     usedPositions: (eds) => Object.keys(POS).filter((k) => eds.some((e) => e.pos[k]?.length)),
     groupOfPos: (k) => (k.startsWith("C") ? "second" : "main"),
