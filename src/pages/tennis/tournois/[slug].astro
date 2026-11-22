@@ -29,7 +29,7 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) =>
 <Base title={c.name} nav="tournois" description={`Palmarès et éditions de ${c.name}.`}>
   <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${S.color} 85%,#fff),color-mix(in srgb,${S.color} 85%,#000))`}>
     <div class="wrap">
-      <div class="art">{c.logo ? <img src={c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
+      <div class="art">{c.logo ? <img src={c.logoSquare || c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
       <div>
         <div class="crumb"><a href="/tennis/">Tennis</a> › <a href="/tennis/#tournois">Tournois</a> › {c.name}</div>
         <h1>{c.name}</h1>

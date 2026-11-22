@@ -103,14 +103,16 @@ if (dataset.warnings.length > 200) console.log(`  … et ${dataset.warnings.leng
 
 // ---------- images ----------
 // Priorité : images-perso/<dossier>/<slug>.(png|jpg|jpeg|webp) puis le fichier Notion.
-// Chaque image est réduite et convertie en WebP pour garder le site léger.
+// Les logos sont affichés en entier : on les place dans un cadre (16:9 pour les cartes,
+// carré pour l'en-tête) dont le fond reprend la couleur du bord du logo.
+// Les photos de joueurs sont simplement réduites. Tout est converti en WebP léger.
 async function processImages(ds) {
   const jobs = [
-    ...ds.players.map((p) => ({ item: p, key: "photo", dir: "joueurs", size: 360 })),
-    ...ds.competitions.map((x) => ({ item: x, key: "logo", dir: "tournois", size: 480 })),
+    ...ds.players.map((p) => ({ item: p, key: "photo", dir: "joueurs", kind: "photo" })),
+    ...ds.competitions.map((x) => ({ item: x, key: "logo", dir: "tournois", kind: "logo" })),
   ];
   let ok = 0, miss = 0;
-  const run = async ({ item, key, dir, size }) => {
+  const run = async ({ item, key, dir, kind }) => {
     const src = item[key];
     item[key] = null;
     let buf = await readPerso(dir, item.slug);
@@ -122,16 +124,42 @@ async function processImages(ds) {
     }
     if (!buf) { if (src) miss++; return; }
     try {
-      const out = path.join(IMG_DIR, dir, `${item.slug}.webp`);
-      await fs.mkdir(path.dirname(out), { recursive: true });
-      await sharp(buf).resize(size, size, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(out);
-      item[key] = `/images/${dir}/${item.slug}.webp`;
+      const base = path.join(IMG_DIR, dir, item.slug);
+      await fs.mkdir(path.dirname(base), { recursive: true });
+      if (kind === "photo") {
+        await sharp(buf).rotate().resize(360, 360, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`${base}.webp`);
+        item[key] = `/images/${dir}/${item.slug}.webp`;
+      } else {
+        const bg = await edgeColor(buf);
+        await sharp(buf).rotate().resize(640, 360, { fit: "contain", background: bg }).flatten({ background: bg }).webp({ quality: 80 }).toFile(`${base}.webp`);
+        await sharp(buf).rotate().resize(320, 320, { fit: "contain", background: bg }).flatten({ background: bg }).webp({ quality: 80 }).toFile(`${base}-carre.webp`);
+        item[key] = `/images/${dir}/${item.slug}.webp`;
+        item.logoSquare = `/images/${dir}/${item.slug}-carre.webp`;
+      }
       ok++;
     } catch { miss++; }
   };
   const queue = jobs.slice();
   await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) await run(queue.shift()); }));
   console.log(`✓ Images : ${ok} prêtes${miss ? `, ${miss} impossibles à lire` : ""}`);
+}
+
+/** Couleur dominante du pourtour de l'image (blanc si le bord est transparent). */
+async function edgeColor(buf) {
+  const { data, info } = await sharp(buf).resize(48, 48, { fit: "fill" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const n = info.width, groups = new Map();
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (x > 1 && x < n - 2 && y > 1 && y < n - 2) continue;
+    const i = (y * n + x) * 4;
+    const px = data[i + 3] < 32 ? [255, 255, 255] : [data[i], data[i + 1], data[i + 2]];
+    const k = px.map((v) => v >> 4).join(",");
+    const g = groups.get(k) || { n: 0, r: 0, g: 0, b: 0 };
+    g.n++; g.r += px[0]; g.g += px[1]; g.b += px[2];
+    groups.set(k, g);
+  }
+  const best = [...groups.values()].sort((a, b) => b.n - a.n)[0];
+  const [r, g, b] = [best.r, best.g, best.b].map((v) => Math.round(v / best.n));
+  return { r, g, b, alpha: 1 };
 }
 
 async function readPerso(dir, slug) {
