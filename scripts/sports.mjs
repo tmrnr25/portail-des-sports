@@ -50,7 +50,7 @@ export function buildSportDataset(cfg, raw, meta) {
   }
 
   // Compétitions
-  const compIds = new Set(raw.comps.map((c) => c.id));
+  const compIds = new Set(raw.comps.filter((c) => c.name).map((c) => c.id));
   const tmp = [];
   for (const e of raw.editions) {
     const compId = (e.comp || []).find((id) => compIds.has(id));
