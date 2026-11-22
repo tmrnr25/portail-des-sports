@@ -55,7 +55,11 @@ export function buildSportDataset(cfg, raw, meta) {
   const tmp = [];
   for (const e of raw.editions) {
     const compId = (e.comp || []).find((id) => compIds.has(id));
-    if (!compId) { warnings.push(`Édition sans compétition : « ${e.name} »`); continue; }
+    if (!compId) {
+      const cited = (e.comp || []).map((id) => { const c = raw.comps.find((x) => x.id === id); return c ? `${id} (lue, nom « ${c.name} »)` : `${id} (non lue)`; });
+      warnings.push(`Édition sans compétition : « ${e.name} »${cited.length ? ` — liée à ${cited.join(", ")}` : " — aucune compétition liée"}`);
+      continue;
+    }
     const { year, season } = seasonOf(e.start, e.name);
     if (!year) { warnings.push(`Édition sans année (ni date, ni année dans le nom) : « ${e.name} »`); continue; }
     const pos = {};
@@ -134,8 +138,10 @@ export async function readSport(cfg, { readAll: readAllRaw, page, text, num, sel
         const parentId = pg.parent?.data_source_id || pg.parent?.database_id;
         const s = cfg.comps.find((c) => c.id === parentId) || cfg.comps[0];
         if (pg.in_trash || pg.archived) { errors.push(`Compétition ${id} : la fiche est dans la corbeille de Notion`); continue; }
-        comps.push(compOf(pg, s));
-        console.log(`✓ ${cfg.label} · compétition récupérée à part : ${text(pg, s.name)}`);
+        const c = compOf(pg, s);
+        comps.push(c);
+        console.log(`✓ ${cfg.label} · compétition récupérée à part : ${c.name}`);
+        if (!c.name) errors.push(`Compétition ${id} récupérée mais sans nom lisible. Propriétés reçues : ${Object.entries(pg.properties || {}).map(([k, v]) => `${k} (${v.type})`).join(", ")}`);
       } catch (err) {
         errors.push(`Compétition ${id} (citée par des éditions) : ${err.code ? err.code + " – " : ""}${err.message || err}`);
       }
