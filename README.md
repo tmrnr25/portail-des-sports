@@ -1,6 +1,6 @@
 # Portail des sports
 
-Site statique généré à partir de la base Notion « Portail des sports » : tennis, football, cyclisme et Formule 1.
+Site statique généré à partir de la base Notion « Portail des sports » : tennis, cyclisme et Formule 1.
 Chaque compétition, édition et joueur a sa page, et toutes les pages sont reliées entre elles.
 
 ## Comment ça marche
@@ -58,6 +58,6 @@ npm run build        # avec NOTION_TOKEN=… pour les vraies données
 npm run preview
 ```
 
-Les noms des bases et des colonnes Notion utilisées sont dans `scripts/config.mjs` (tennis) et `src/sports/config.js` (football, cyclisme, F1). Un sport dont la lecture échoue est affiché vide sans bloquer le reste du site.
+Les noms des bases et des colonnes Notion utilisées sont dans `scripts/config.mjs` (tennis) et `src/sports/config.js` (cyclisme, F1 ; d'autres sports peuvent y être ajoutés). Un sport dont la lecture échoue est affiché vide sans bloquer le reste du site.
 
-Images perso des autres sports : `images-perso/<sport>/<dossier>/<slug>.png`, par ex. `images-perso/football/equipes/paris-saint-germain.png`, `images-perso/f1/pilotes/charles-leclerc.png`, `images-perso/cyclisme/competitions/tour-de-france.png`.
+Images perso des autres sports : `images-perso/<sport>/<dossier>/<slug>.png`, par ex. `images-perso/f1/pilotes/charles-leclerc.png`, `images-perso/cyclisme/competitions/tour-de-france.png`.

@@ -1,5 +1,5 @@
 // Lit les bases Notion, prépare les images et écrit un fichier de données par sport
-// dans src/data/ (tennis.json, football.json, cyclisme.json, f1.json).
+// dans src/data/ (tennis.json, cyclisme.json, f1.json).
 // Sans clé NOTION_TOKEN, utilise les données d'exemple (pour tester en local).
 import notionPkg from "@notionhq/client";
 const { Client, collectAllDataSourceRows } = notionPkg;

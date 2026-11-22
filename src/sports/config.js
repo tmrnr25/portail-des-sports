@@ -22,49 +22,6 @@ export const POS = {
 
 export const SPORTS = [
   {
-    key: "football",
-    label: "Football",
-    color: "#1e5b3f",
-    emoji: "⚽",
-    compWord: { one: "compétition", many: "compétitions" },
-    groups: {
-      main: { path: "equipes", label: "Équipes", one: "équipe", fem: true, photoKind: "logo" },
-      second: { path: "joueurs", label: "Joueurs", one: "joueur", photoKind: "photo" },
-    },
-    comps: [
-      { id: "2cc0d481-baea-8159-b110-000b437b0ecc", name: "Nom", category: "Type de Compétition", logo: "Logo", zone: "Zone Géographique" },
-      { id: "0590d481-baea-83be-ae98-07ff3cf39566", name: "Nom", category: "Type de Compétition", logo: "Logo", zone: "Zone Géographique" },
-    ],
-    editions: [
-      {
-        id: "2a70d481-baea-806a-b00b-000b3495ea23", // Editions Football Coupe
-        name: "Nom", comp: ["Compétitions football"], host: "Pays hôte",
-        positions: [["V", "Vainqueur", "main"], ["F", "Finaliste", "main"], ["SF", "Demi-finaliste", "main"], ["QF", "Quart de finaliste", "main"]],
-        awards: [
-          ["Meilleur Joueur", "Meilleur joueur"], ["Meilleur(s) Buteur(s)", "Meilleur buteur"], ["Meilleur(s) Passeur(s)", "Meilleur passeur"],
-          ["Meilleur Jeune", "Meilleur jeune"], ["Meilleur(s) Gardien(s)", "Meilleur gardien"], ["Meilleur(s) Défenseur(s)", "Meilleur défenseur"],
-          ["Meilleur(s) Milieu(x)", "Meilleur milieu"], ["Meilleur(s) Attaquant(s)", "Meilleur attaquant"],
-        ].map(([col, label]) => ({ col, label, group: "second" })),
-      },
-      {
-        id: "7890d481-baea-8373-b0c5-877f4cac05d2", // Editions Football Championnat
-        name: "Nom", comp: ["Championnats", "Compétitions football"], host: "Pays hôte",
-        positions: [["P1", "Vainqueur", "main"], ["P2", "Deuxième", "main"], ["P3", "Troisième", "main"], ["P4", "Quatrième", "main"], ["P5", "Cinquième", "main"]],
-        awards: [
-          ["Meilleur Joueur", "Meilleur joueur"], ["Meilleur(s) Buteur(s)", "Meilleur buteur"], ["Meilleur(s) Passeur(s)", "Meilleur passeur"],
-          ["Meilleur Jeune", "Meilleur jeune"], ["Meilleur(s) Gardien(s)", "Meilleur gardien"], ["Meilleur(s) Défenseur(s)", "Équipe type : défense"],
-          ["Meilleur(s) Milieu(x)", "Équipe type : milieu"], ["Meilleur(s) Attaquant(s)", "Équipe type : attaque"],
-        ].map(([col, label]) => ({ col, label, group: "second" })),
-      },
-    ],
-    entities: {
-      main: { id: "2a70d481-baea-80af-b662-000b58f10f32", name: "Nom de l'équipe", photo: "Blason", nat: "Pays",
-        info: [["Type d'Equipe", "select"], ["Surnom", "text"], ["Année de création", "number", "Créée en"], ["Disparition", "number", "Disparue en"]] },
-      second: { id: "2a70d481-baea-80e5-ac3d-000bc419cf5b", name: "Postes", nat: "Nationalité", teams: "Equipes",
-        info: [["Poste", "multi"]] },
-    },
-  },
-  {
     key: "cyclisme",
     label: "Cyclisme",
     color: "#b8452a",

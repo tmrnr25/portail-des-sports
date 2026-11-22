@@ -1,4 +1,4 @@
-// Prépare les données d'un sport (football, cyclisme, F1) pour les pages.
+// Prépare les données d'un sport (cyclisme, F1) pour les pages.
 import { SPORTS, POS, sportByKey } from "../sports/config.js";
 
 const files = import.meta.glob("../data/*.json", { eager: true, import: "default" });
