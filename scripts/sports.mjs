@@ -91,7 +91,7 @@ export function buildSportDataset(cfg, raw, meta) {
 }
 
 /** Lit toutes les bases d'un sport via les fonctions d'accès fournies. */
-export async function readSport(cfg, { readAll: readAllRaw, text, num, sel, multi, rel, date, file }, zones) {
+export async function readSport(cfg, { readAll: readAllRaw, page, text, num, sel, multi, rel, date, file }, zones) {
   const errors = [];
   // Chaque base est lue séparément : si l'une échoue, les autres restent affichées.
   const readAll = async (id, label) => {
@@ -104,13 +104,12 @@ export async function readSport(cfg, { readAll: readAllRaw, text, num, sel, mult
     }
   };
   const comps = [];
+  const compOf = (pg, s) => ({
+    id: pg.id, name: text(pg, s.name), category: sel(pg, s.category), logo: file(pg, s.logo),
+    zone: rel(pg, s.zone), place: s.place ? text(pg, s.place) : "", active: s.active ? sel(pg, s.active) : null,
+  });
   for (const s of cfg.comps) {
-    for (const pg of await readAll(s.id, `${cfg.label} · compétitions`)) {
-      comps.push({
-        id: pg.id, name: text(pg, s.name), category: sel(pg, s.category), logo: file(pg, s.logo),
-        zone: rel(pg, s.zone), place: s.place ? text(pg, s.place) : "", active: s.active ? sel(pg, s.active) : null,
-      });
-    }
+    for (const pg of await readAll(s.id, `${cfg.label} · compétitions`)) comps.push(compOf(pg, s));
   }
   const editions = [];
   for (const s of cfg.editions) {
@@ -123,6 +122,23 @@ export async function readSport(cfg, { readAll: readAllRaw, text, num, sel, mult
         comp: s.comp.flatMap((c) => rel(pg, c)), host: s.host ? rel(pg, s.host) : [],
         pos, awards: (s.awards || []).map((a) => ({ label: a.label, group: a.group, ids: rel(pg, a.col) })),
       });
+    }
+  }
+  // Compétitions citées par des éditions mais absentes de la lecture : on les demande une par une.
+  if (page) {
+    const known = new Set(comps.map((c) => c.id));
+    const missing = [...new Set(editions.map((e) => e.comp[0]).filter((id) => id && !known.has(id)))].slice(0, 50);
+    for (const id of missing) {
+      try {
+        const pg = await page(id);
+        const parentId = pg.parent?.data_source_id || pg.parent?.database_id;
+        const s = cfg.comps.find((c) => c.id === parentId) || cfg.comps[0];
+        if (pg.in_trash || pg.archived) { errors.push(`Compétition ${id} : la fiche est dans la corbeille de Notion`); continue; }
+        comps.push(compOf(pg, s));
+        console.log(`✓ ${cfg.label} · compétition récupérée à part : ${text(pg, s.name)}`);
+      } catch (err) {
+        errors.push(`Compétition ${id} (citée par des éditions) : ${err.code ? err.code + " – " : ""}${err.message || err}`);
+      }
     }
   }
   const ent = async (g) => {

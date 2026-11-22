@@ -120,6 +120,7 @@ const zones = rawZ.map((pg) => ({ id: pg.id, name: txt(prop(pg, COLS.zone.name))
 // ---------- autres sports ----------
 const acc = {
   readAll,
+  page: (id) => notion.pages.retrieve({ page_id: id }),
   text: (pg, col) => txt(prop(pg, col)), num: (pg, col) => nm(prop(pg, col)), sel: (pg, col) => sl(prop(pg, col)),
   multi: (pg, col) => ms(prop(pg, col)), rel: (pg, col) => rl(prop(pg, col)), date: (pg, col) => dt(prop(pg, col)), file: (pg, col) => fl(prop(pg, col)),
 };
