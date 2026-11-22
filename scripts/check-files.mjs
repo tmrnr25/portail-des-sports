@@ -10,4 +10,7 @@ if (n > LIMIT) {
   console.error(`✖ Le site compte ${n} fichiers, au-delà de la limite gratuite de ${LIMIT}. Mise en ligne annulée : le site actuel reste en place.`);
   process.exit(1);
 }
+// Affiche le total sur la page « État des données »
+const etat = path.resolve("dist/etat/index.html");
+if (fs.existsSync(etat)) fs.writeFileSync(etat, fs.readFileSync(etat, "utf8").replace("__NB_FICHIERS__", `${n.toLocaleString("fr-FR")} (${pct} %)`));
 console.log(`${pct >= 90 ? "⚠" : "✓"} Fichiers du site : ${n} sur ${LIMIT} autorisés (${pct} %)${pct >= 90 ? " — on approche de la limite." : "."}`);
