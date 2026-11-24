@@ -157,8 +157,9 @@ for (const [s, w] of report) {
 
 // ---------- images ----------
 // Choix forcé du fond d'un logo (scripts/logos.mjs) : nom exact d'abord, sinon début du nom.
-const FORCED = Object.entries(LOGO_BG).map(([k, v]) => [slugify(k), v]);
+// (calculé à l'appel : ce code est en bas du fichier mais servi dès le début)
 function forcedBg(slug) {
+  const FORCED = Object.entries(LOGO_BG).map(([k, v]) => [slugify(k), v]);
   const exact = FORCED.find(([k]) => k === slug);
   if (exact) return exact[1];
   const start = FORCED.filter(([k]) => slug.startsWith(k + "-") || slug.startsWith(k)).sort((a, b) => b[0].length - a[0].length)[0];
@@ -211,7 +212,7 @@ async function processImages(jobs) {
         item[key + "Bg"] = `rgb(${bg.r},${bg.g},${bg.b})`;
       }
       ok++;
-    } catch (err) { miss++; if (process.env.DEBUG_IMG) console.warn("image", item.slug, err.message); }
+    } catch (err) { miss++; if (miss <= 3 || process.env.DEBUG_IMG) console.warn(`⚠ Image illisible (${item.slug}) : ${err.message}`); }
   };
   const queue = jobs.slice();
   await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) await run(queue.shift()); }));
