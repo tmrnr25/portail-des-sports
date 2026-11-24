@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { heroBg, competitions, editionsByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
+import { roundLabels, isOlympic, heroBg, competitions, editionsByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return competitions.map((c) => ({ params: { slug: c.slug }, props: { c } }));
 }
@@ -30,7 +30,9 @@ const decades = Object.keys(dec).sort().map((d) => {
 const S = surf(c.surface);
 const cityLines = (c.city || "").split("\n").map((s) => s.trim()).filter(Boolean);
 // Colonnes du tableau : on ne garde que les tours renseignés au moins une fois
-const COLS = [["v", "Vainqueur"], ["f", "Finaliste"], ["sf", "Demi-finalistes"], ["qf", "Quart-de-finalistes"]].filter(([k]) => k === "v" || eds.some((e) => e[k].length));
+const RL = roundLabels(c);
+const olympic = isOlympic(c);
+const COLS = [["v", RL.v], ["f", RL.f], ["sf", RL.sf], ["qf", RL.qf]].filter(([k]) => k === "v" || eds.some((e) => e[k].length));
 // Historique des surfaces (d'après la surface de chaque édition)
 const surfRuns = [];
 eds.slice().reverse().forEach((e) => {
@@ -124,12 +126,13 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) =>
             <tr data-s={search(e)}>
               <td class="y"><a href={url.edition(e)}>{e.year}</a></td>
               {surfChanged && <td><span class="chip"><i class="dot" style={`background:${surf(e.surface || c.surface).color}`}></i>{surf(e.surface || c.surface).label}</span></td>}
-              {COLS.map(([k]) => <td>{e[k].map((id, i) => <>{i > 0 && <br />}<a href={url.player(P(id))}>{P(id).name}</a></>)}</td>)}
+              {COLS.map(([k]) => <td>{e[k].map((id, i) => <>{i > 0 && <br />}{olympic && k === "v" && <i class="medal or" title="Médaille d'or"></i>}{olympic && k === "f" && <i class="medal argent" title="Médaille d'argent"></i>}{olympic && k === "sf" && (e.b || []).includes(id) && <i class="medal bronze" title="Médaille de bronze"></i>}<a href={url.player(P(id))}>{P(id).name}</a></>)}</td>)}
             </tr>
           ))}
         </tbody>
       </table>
       <p class="empty" id="none" hidden>Aucune édition ne correspond.</p>
+      {olympic && <p class="legend" style="margin-top:12px"><span><i class="medal or"></i>Or</span><span><i class="medal argent"></i>Argent</span><span><i class="medal bronze"></i>Bronze</span></p>}
     </div>
   </section>
   <script is:inline>

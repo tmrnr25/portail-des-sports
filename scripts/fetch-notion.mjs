@@ -105,7 +105,7 @@ const zones = rawZ.map((pg) => ({ id: pg.id, name: txt(prop(pg, COLS.zone.name))
         surface: sl(prop(pg, c.edition.surface)), category: sl(prop(pg, c.edition.category)),
         comp: rl(prop(pg, c.edition.comp)), winner: rl(prop(pg, c.edition.winner)),
         finalist: rl(prop(pg, c.edition.finalist)), semi: rl(prop(pg, c.edition.semi)),
-        quarter: rl(prop(pg, c.edition.quarter)),
+        quarter: rl(prop(pg, c.edition.quarter)), bronze: rl(prop(pg, c.edition.bronze)),
       };
     }),
     players: rawP.map((pg) => ({

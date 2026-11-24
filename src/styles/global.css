@@ -91,6 +91,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;font-weight:600;white-space:nowrap}
 .pill.V{background:var(--or);color:#3a2800}.pill.F{background:var(--argent);color:#14213d}.pill.SF{background:var(--bronze);color:#fff}.pill.QF{background:var(--qf);color:var(--ink)}
 .muted{color:var(--mute)}
+.medal{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:-1px;flex:none;box-shadow:inset 0 -2px 0 #0003}
+.medal.or{background:#d4af37}.medal.argent{background:#c4c8cc}.medal.bronze{background:#cd7f32}
+.legend .medal{margin-right:6px}
 
 /* outils */
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}

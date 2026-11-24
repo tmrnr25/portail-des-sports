@@ -19,6 +19,18 @@ export const SURFACES = {
 export const surf = (s) => (SURFACES[s] ? { ...SURFACES[s], known: true } : { label: s || "", color: "var(--court)", known: !!s });
 // Bandeau d'une page tournoi : couleur de la surface, or pour les Jeux olympiques
 export const isOlympic = (c) => c.category === "JO" || /olympi/i.test(c.name);
+// ATP Finals et Next Gen ATP Finals : les « quarts » correspondent à la phase de groupe
+export const isGroupStage = (c) => c.category === "ATP Finals" || /finals/i.test(c.name);
+/** Libellés des tours selon le tournoi (pluriel, singulier) */
+export const roundLabels = (c) => ({
+  v: isOlympic(c) ? "Médaille d'or" : "Vainqueur",
+  f: isOlympic(c) ? "Médaille d'argent" : "Finaliste",
+  sf: "Demi-finalistes",
+  qf: isGroupStage(c) ? "Phase de groupe" : "Quart-de-finalistes",
+  qfCol: isGroupStage(c) ? "Phase de groupe" : "Quarts de finale",
+  fCol: isOlympic(c) ? "Médaille d'argent" : "Finale",
+  vCol: isOlympic(c) ? "Médaille d'or" : "Vainqueur",
+});
 export const heroBg = (c, S) => {
   const col = isOlympic(c) ? "#c9a227" : isOtherComp(c) ? compColor(c) : S.color;
   return `background:linear-gradient(160deg,color-mix(in srgb,${col} 85%,#fff),color-mix(in srgb,${col} 80%,#000))`;

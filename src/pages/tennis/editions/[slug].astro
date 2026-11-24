@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { heroBg, editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
+import { roundLabels, isOlympic, isGroupStage, heroBg, editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return editions.map((e) => ({ params: { slug: e.slug }, props: { e } }));
 }
@@ -11,7 +11,11 @@ const i = list.indexOf(e);
 const prev = list[i + 1], next = list[i - 1];
 const S = surf(e.surface || c.surface);
 const P = (id) => playerById.get(id);
-const cols = [["Quarts de finale", e.qf, false], ["Demi-finales", e.sf, false], ["Finale", e.f, false], ["Vainqueur", e.v, true]].filter(([, ids, win]) => win || ids.length > 0);
+const RL = roundLabels(c);
+const olympic = isOlympic(c);
+const bronze = new Set(e.b || []);
+const cols = [[RL.qfCol, e.qf, false, "qf"], ["Demi-finales", e.sf, false, "sf"], [RL.fCol, e.f, false, "f"], [RL.vCol, e.v, true, "v"]].filter(([, ids, win]) => win || ids.length > 0);
+const medal = (k, id) => (!olympic ? null : k === "v" ? "or" : k === "f" ? "argent" : k === "sf" && bronze.has(id) ? "bronze" : null);
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
 ---
 <Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
@@ -34,16 +38,16 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
   <section class="band">
     <div class="wrap">
       <h2>Tableau final</h2>
-      <p class="sub">{e.qf.length ? "Des quarts au titre." : e.sf.length ? "Des demi-finales au titre." : "La finale."} Chaque nom ouvre la fiche du joueur.</p>
+      <p class="sub">{e.qf.length ? (isGroupStage(c) ? "De la phase de groupe au titre." : "Des quarts au titre.") : e.sf.length ? "Des demi-finales au titre." : "La finale."} Chaque nom ouvre la fiche du joueur.{olympic && bronze.size > 0 && " Le rond de bronze indique le vainqueur du match pour la 3e place."}</p>
       <div class="draw" style={`--cols:${cols.length}`}>
-        {cols.map(([title, ids, win]) => (
+        {cols.map(([title, ids, win, k]) => (
           <div class="col">
             <h3>{title}</h3>
-            {ids.length === 0 && <div class="slot muted">Non renseigné</div>}
             {ids.map((id) => (
               <div class={`slot${win ? " win" : ""}`}>
                 <span class="mini">{P(id).photo ? <img src={P(id).photo} alt="" loading="lazy" /> : initials(P(id).name)}</span>
                 <a href={url.player(P(id))}>{P(id).name}</a>
+                {medal(k, id) && <i class={`medal ${medal(k, id)}`} title={`Médaille ${medal(k, id) === "or" ? "d'or" : medal(k, id) === "argent" ? "d'argent" : "de bronze"}`} style="margin-left:auto"></i>}
               </div>
             ))}
           </div>
