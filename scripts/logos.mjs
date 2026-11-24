@@ -1,6 +1,7 @@
 // Fond des logos : choix forcé pour certains logos.
 // Clé : le nom du tournoi (ou le début de son nom), sans se soucier des accents ni des majuscules.
-// Valeur : "blanc", ou une couleur indicative (orange, vert, vert-jaune, bleu, rouge, jaune, violet, noir, gris) :
+// Valeur : "blanc", une couleur exacte (ex. "#000000" pour du noir),
+// ou une couleur indicative (orange, vert, vert-pomme, vert-jaune, bleu, rouge, jaune, violet, noir, gris) :
 // le site prend alors, dans le logo lui-même, la couleur la plus proche de cette indication.
 export const LOGO_BG = {
   "Roland-Garros": "orange",
@@ -22,7 +23,26 @@ export const LOGO_BG = {
   "BMW Open": "vert-jaune",
   "Dubai Tennis Championships": "rouge",
   "Canada Open": "blanc",
-  "Almaty Open": "vert",
+  "Almaty Open": "vert-pomme",
   "Argentina Open": "blanc",
   "Brisbane International": "blanc",
+  "Adélaïde International": "blanc",
+  "Chile Open": "blanc",
+  "Eastbourne Open": "blanc",
+  "European Open": "blanc",
+  "Generali Open": "blanc",
+  "Geneva Open": "blanc",
+  "Grand Prix Auvergne-Rhône-Alpes": "blanc",
+  "Hangzhou Open": "blanc",
+  "Hong Kong Tennis Open": "blanc",
+  "Libéma Open": "blanc",
+  "Open 13 Provence": "blanc",
+  "Open Occitanie": "blanc",
+  "US Men's Clay Court Championship": "blanc",
+  "U.S. Men's Clay Court Championship": "blanc",
+  "Mifel Tennis Open": "blanc",
+  "Croatia Open": "orange",
+  "Delray Beach Open": "jaune",
+  "Estoril Open": "#000000",
+  "Grand Prix Hassan II": "vert",
 };

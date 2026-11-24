@@ -18,6 +18,9 @@ const REPORT = path.join(ROOT, "rapport-donnees.txt");
 const IMG_DIR = path.join(ROOT, "public/images");
 const PERSO_DIR = path.join(ROOT, "images-perso"); // tes propres images, prioritaires
 
+// Catégories de tennis qui affichent un logo (les « Autres tournois » n'en ont pas)
+const MAIN_CATEGORIES = ["Grand Chelem", "ATP Finals", "JO", "Masters 1000", "ATP 500", "ATP 250"];
+
 const token = process.env.NOTION_TOKEN;
 await fs.mkdir(DATA, { recursive: true });
 const write = (name, obj) => fs.writeFile(path.join(DATA, `${name}.json`), JSON.stringify(obj));
@@ -159,18 +162,23 @@ for (const [s, w] of report) {
 // Choix forcé du fond d'un logo (scripts/logos.mjs) : nom exact d'abord, sinon début du nom.
 // (calculé à l'appel : ce code est en bas du fichier mais servi dès le début)
 function forcedBg(slug) {
-  const FORCED = Object.entries(LOGO_BG).map(([k, v]) => [slugify(k), v]);
-  const exact = FORCED.find(([k]) => k === slug);
+  const compact = (t) => slugify(t).replace(/-/g, "");
+  const FORCED = Object.entries(LOGO_BG).map(([k, v]) => [compact(k), v]);
+  const me = slug.replace(/-/g, "");
+  const exact = FORCED.find(([k]) => k === me);
   if (exact) return exact[1];
-  const start = FORCED.filter(([k]) => slug.startsWith(k + "-") || slug.startsWith(k)).sort((a, b) => b[0].length - a[0].length)[0];
+  const start = FORCED.filter(([k]) => me.startsWith(k)).sort((a, b) => b[0].length - a[0].length)[0];
   return start ? start[1] : undefined;
 }
 function tennisJobs(ds) {
+  dropOtherLogos(ds);
   return [
     ...ds.players.map((p) => ({ item: p, key: "photo", dir: "joueurs", kind: "photo" })),
-    ...ds.competitions.map((x) => ({ item: x, key: "logo", dir: "tournois", kind: "logo" })),
+    // Les tournois du groupe « Autres tournois » n'ont pas de logo sur le site
+    ...ds.competitions.filter((x) => MAIN_CATEGORIES.includes(x.category)).map((x) => ({ item: x, key: "logo", dir: "tournois", kind: "logo" })),
   ];
 }
+function dropOtherLogos(ds) { for (const x of ds.competitions) if (!MAIN_CATEGORIES.includes(x.category)) x.logo = null; }
 function sportJobs(cfg, ds) {
   return [
     ...ds.comps.map((x) => ({ item: x, key: "logo", dir: `${cfg.key}/competitions`, kind: "logo" })),
@@ -229,7 +237,7 @@ async function processImages(jobs) {
  */
 async function prepareLogo(buf, forced) {
   const WHITE = { r: 255, g: 255, b: 255, alpha: 1 };
-  const HINTS = { orange: [225, 110, 40], vert: [30, 120, 55], "vert-jaune": [175, 205, 40], bleu: [30, 80, 180], rouge: [200, 30, 45], jaune: [240, 200, 40], violet: [100, 45, 135], noir: [10, 10, 10], gris: [128, 128, 128] };
+  const HINTS = { orange: [225, 110, 40], vert: [30, 120, 55], "vert-pomme": [120, 190, 50], "vert-jaune": [175, 205, 40], bleu: [30, 80, 180], rouge: [200, 30, 45], jaune: [240, 200, 40], violet: [100, 45, 135], noir: [10, 10, 10], gris: [128, 128, 128] };
   const { data, info } = await sharp(buf).rotate().resize(368, 368, { fit: "inside" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, px = (i) => [data[i], data[i + 1], data[i + 2], data[i + 3]];
   const isWhite = (i) => data[i + 3] > 200 && data[i] > 232 && data[i + 1] > 232 && data[i + 2] > 232;
@@ -270,8 +278,11 @@ async function prepareLogo(buf, forced) {
   // 1. choix forcé
   if (forced) {
     if (forced === "blanc") return out(WHITE);
+    if (/^#[0-9a-f]{6}$/i.test(forced)) { const h = forced.slice(1); return out({ r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16), alpha: 1 }); }
     const target = HINTS[forced];
-    const cand = palette.filter((p) => p.share > 0.02).sort((a, b) => dist(a.c, target) - dist(b.c, target))[0];
+    if (!target) return out(WHITE);
+    // la couleur du logo la plus proche de l'indication, même si elle n'occupe qu'une petite partie du logo
+    const cand = palette.filter((p) => p.share > 0.004).sort((a, b) => dist(a.c, target) - dist(b.c, target))[0];
     return out(cand ? rgb(cand.c) : WHITE);
   }
   // 2. logo sur fond de couleur : on prolonge ce fond
