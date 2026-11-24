@@ -20,7 +20,7 @@ export const surf = (s) => (SURFACES[s] ? { ...SURFACES[s], known: true } : { la
 // Bandeau d'une page tournoi : couleur de la surface, or pour les Jeux olympiques
 export const isOlympic = (c) => c.category === "JO" || /olympi/i.test(c.name);
 export const heroBg = (c, S) => {
-  const col = isOlympic(c) ? "#c9a227" : S.color;
+  const col = isOlympic(c) ? "#c9a227" : isOtherComp(c) ? compColor(c) : S.color;
   return `background:linear-gradient(160deg,color-mix(in srgb,${col} 85%,#fff),color-mix(in srgb,${col} 80%,#000))`;
 };
 
@@ -86,6 +86,22 @@ export const COMP_GROUPS = [
   { title: "ATP 250", match: (c) => c.category === "ATP 250" },
   { title: "Autres tournois", match: () => true },
 ];
+// Les tournois du groupe « Autres tournois » (pas de logo)
+const MAIN_CATS = ["Grand Chelem", "ATP Finals", "JO", "Masters 1000", "ATP 500", "ATP 250"];
+export const isOtherComp = (c) => !MAIN_CATS.includes(c.category);
+/** Surface sur laquelle le tournoi s'est le plus joué ; à égalité, celle jouée le plus récemment. */
+export function mainSurface(c) {
+  const by = {};
+  for (const e of editionsByComp.get(c.id) || []) {
+    const s = e.surface || c.surface; if (!s) continue;
+    by[s] = by[s] || { n: 0, last: 0 }; by[s].n++; by[s].last = Math.max(by[s].last, e.year);
+  }
+  const best = Object.entries(by).sort((a, b) => b[1].n - a[1].n || b[1].last - a[1].last)[0];
+  return best ? best[0] : c.surface;
+}
+/** Couleur d'un tournoi : surface la plus jouée pour les « Autres tournois », surface actuelle sinon. */
+export const compColor = (c) => surf(isOtherComp(c) ? mainSurface(c) : c.surface).color;
+
 export function groupCompetitions() {
   const left = new Set(competitions);
   return COMP_GROUPS.map((g) => {

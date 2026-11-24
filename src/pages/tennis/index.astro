@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { competitions, editions, players, groupCompetitions, statsById, compById, playerById, surf, initials, url, plural } from "../../lib/tennis.js";
+import { compColor, competitions, editions, players, groupCompetitions, statsById, compById, playerById, surf, initials, url, plural } from "../../lib/tennis.js";
 const groups = groupCompetitions();
 const top = players.map((p) => ({ p, s: statsById.get(p.id) })).filter((x) => x.s.titles).sort((a, b) => b.s.gc - a.s.gc || b.s.titles - a.s.titles).slice(0, 10);
 const recent = editions.filter((e) => e.v.length).slice(0, 8);
@@ -66,7 +66,7 @@ const maxT = Math.max(1, ...top.map((x) => x.s.titles));
           <div class="grid">
             {g.items.map((c) => (
               <a class="card" href={url.comp(c)} data-s={`${c.name} ${c.city || ""} ${c.zone?.name || ""}`.toLowerCase()}>
-                <div class="pic" style={`background:${surf(c.surface).color}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
+                <div class="pic" style={`background:${compColor(c)}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
                 <div class="body">
                   <h3>{c.name}</h3>
                   {c.surface && <span class="chip"><i class="dot" style={`background:${surf(c.surface).color}`}></i>{surf(c.surface).label}</span>}
