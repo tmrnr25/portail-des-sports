@@ -1,0 +1,17 @@
+---
+// Logo affiché dans un cadre carré, aussi grand que possible sans être coupé.
+// L'image enregistrée est en 16:9 (logo centré sur la couleur de son bord) ;
+// on l'agrandit selon les proportions du logo pour qu'il remplisse le carré.
+const { src, ratio, bg, alt = "", fallback = "" } = Astro.props;
+const R = 16 / 9;
+let style = "";
+if (src) {
+  const r = ratio || R;
+  // hauteur de l'image 16:9 (en % du carré) pour que le logo touche les bords du carré
+  const h = r <= 1 ? 100 : r <= R ? 100 / r : 100 / R;
+  style = `height:${h.toFixed(2)}%`;
+}
+---
+<div class="art logo" style={bg ? `background:${bg}` : ""}>
+  {src ? <img src={src} alt={alt} style={style} /> : fallback}
+</div>

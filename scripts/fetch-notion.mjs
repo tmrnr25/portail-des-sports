@@ -194,12 +194,20 @@ async function processImages(jobs) {
         await sharp(buf).rotate().resize(360, 360, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
       } else {
+        // On retire les marges unies autour du logo pour qu'il occupe tout l'espace disponible
+        try {
+          const t = await sharp(buf).rotate().trim({ threshold: 12 }).toBuffer({ resolveWithObject: true });
+          if (t.info.width > 16 && t.info.height > 16) buf = t.data;
+        } catch { /* image sans marge : on garde l'originale */ }
+        const meta = await sharp(buf).rotate().metadata();
         const bg = await edgeColor(buf);
         await sharp(buf).rotate().resize(640, 360, { fit: "contain", background: bg }).flatten({ background: bg }).webp({ quality: 80 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
         // Une seule image par logo (limite de 20 000 fichiers) : la couleur du bord sert de fond
         // dans les cadres carrés, pour que le logo y paraisse entier et sans bandes.
         item[key + "Bg"] = `rgb(${bg.r},${bg.g},${bg.b})`;
+        // Proportions du logo (largeur / hauteur), pour le cadrer au mieux dans les carrés
+        item[key + "Ratio"] = meta.width && meta.height ? Math.round((meta.width / meta.height) * 1000) / 1000 : null;
       }
       ok++;
     } catch { miss++; }
