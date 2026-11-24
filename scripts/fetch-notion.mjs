@@ -229,7 +229,7 @@ async function processImages(jobs) {
  */
 async function prepareLogo(buf, forced) {
   const WHITE = { r: 255, g: 255, b: 255, alpha: 1 };
-  const HINTS = { orange: [225, 110, 40], vert: [30, 120, 55], bleu: [30, 80, 180], rouge: [200, 30, 45], jaune: [240, 200, 40], violet: [100, 45, 135], noir: [10, 10, 10], gris: [128, 128, 128] };
+  const HINTS = { orange: [225, 110, 40], vert: [30, 120, 55], "vert-jaune": [175, 205, 40], bleu: [30, 80, 180], rouge: [200, 30, 45], jaune: [240, 200, 40], violet: [100, 45, 135], noir: [10, 10, 10], gris: [128, 128, 128] };
   const { data, info } = await sharp(buf).rotate().resize(368, 368, { fit: "inside" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, px = (i) => [data[i], data[i + 1], data[i + 2], data[i + 3]];
   const isWhite = (i) => data[i + 3] > 200 && data[i] > 232 && data[i + 1] > 232 && data[i + 2] > 232;

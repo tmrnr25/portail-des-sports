@@ -1,6 +1,6 @@
 // Fond des logos : choix forcé pour certains logos.
 // Clé : le nom du tournoi (ou le début de son nom), sans se soucier des accents ni des majuscules.
-// Valeur : "blanc", ou une couleur indicative (orange, vert, bleu, rouge, jaune, violet, noir, gris) :
+// Valeur : "blanc", ou une couleur indicative (orange, vert, vert-jaune, bleu, rouge, jaune, violet, noir, gris) :
 // le site prend alors, dans le logo lui-même, la couleur la plus proche de cette indication.
 export const LOGO_BG = {
   "Roland-Garros": "orange",
@@ -19,6 +19,10 @@ export const LOGO_BG = {
   "ATP Finals": "blanc",
   "Next Gen ATP Finals": "blanc",
   "Citi DC Open": "rouge",
-  "BMW Open": "vert",
+  "BMW Open": "vert-jaune",
   "Dubai Tennis Championships": "rouge",
+  "Canada Open": "blanc",
+  "Almaty Open": "vert",
+  "Argentina Open": "blanc",
+  "Brisbane International": "blanc",
 };
