@@ -194,8 +194,11 @@ async function processImages(jobs) {
         await sharp(buf).rotate().resize(360, 360, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
       } else {
-        const bg = await edgeColor(buf);
-        await sharp(buf).rotate().resize(512, 512, { fit: "contain", background: bg }).flatten({ background: bg }).webp({ quality: 80 }).toFile(`${base}.webp`);
+        const bg = await logoBackground(buf);
+        // Le logo occupe environ 72 % du carré : il garde de l'air tout autour.
+        const inner = await sharp(buf).rotate().resize(368, 368, { fit: "inside" }).flatten({ background: bg }).toBuffer();
+        await sharp({ create: { width: 512, height: 512, channels: 3, background: bg } })
+          .composite([{ input: inner, gravity: "center" }]).webp({ quality: 82 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
         item[key + "Bg"] = `rgb(${bg.r},${bg.g},${bg.b})`;
       }
@@ -205,6 +208,42 @@ async function processImages(jobs) {
   const queue = jobs.slice();
   await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) await run(queue.shift()); }));
   if (jobs.length) console.log(`✓ Images : ${ok} prêtes${miss ? `, ${miss} impossibles à lire` : ""}`);
+}
+
+/**
+ * Couleur de fond du carré d'un logo :
+ * - logo posé sur un fond de couleur (bord opaque) : on prolonge ce fond ;
+ * - logo sans fond (bord transparent) : une teinte claire de sa couleur principale
+ *   (ou un fond sombre si le logo est lui-même très clair).
+ */
+async function logoBackground(buf) {
+  const { data, info } = await sharp(buf).rotate().resize(64, 64, { fit: "fill" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const n = info.width;
+  let edgeTransparent = 0, edgeTotal = 0;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (x > 1 && x < n - 2 && y > 1 && y < n - 2) continue;
+    edgeTotal++; if (data[(y * n + x) * 4 + 3] < 32) edgeTransparent++;
+  }
+  if (edgeTransparent / edgeTotal < 0.5) return edgeColor(buf);
+  // couleur principale du logo (pixels visibles, hors blanc et gris)
+  const groups = new Map();
+  let light = 0, visible = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 128) continue;
+    visible++;
+    const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    if (mx > 225 && mn > 225) { light++; continue; }
+    if (mx - mn < 24) continue;
+    const k = `${r >> 5},${g >> 5},${b >> 5}`;
+    const gr = groups.get(k) || { n: 0, r: 0, g: 0, b: 0 };
+    gr.n++; gr.r += r; gr.g += g; gr.b += b; groups.set(k, gr);
+  }
+  if (visible && light / visible > 0.6) return { r: 28, g: 36, b: 48, alpha: 1 }; // logo blanc : fond sombre
+  const best = [...groups.values()].sort((a, b) => b.n - a.n)[0];
+  if (!best) return { r: 244, g: 244, b: 242, alpha: 1 };
+  const tint = (v) => Math.round(255 - (255 - v / best.n) * 0.14); // 14 % de la couleur, 86 % de blanc
+  return { r: tint(best.r), g: tint(best.g), b: tint(best.b), alpha: 1 };
 }
 
 /** Couleur dominante du pourtour de l'image (blanc si le bord est transparent). */
