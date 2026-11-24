@@ -11,7 +11,12 @@ const W = {}, F = {};
 eds.forEach((e) => { e.v.forEach((p) => (W[p] = (W[p] || 0) + 1)); e.f.forEach((p) => (F[p] = (F[p] || 0) + 1)); });
 const top = Object.keys(W).sort((a, b) => W[b] - W[a] || (F[b] || 0) - (F[a] || 0)).slice(0, 10);
 const best = top[0];
-const bestYears = best ? eds.filter((e) => e.v.includes(best)).map((e) => e.year).sort((a, b) => a - b) : [];
+// Record : tous les joueurs à égalité au nombre de titres maximum
+const recordMax = best ? W[best] : 0;
+const span = (ys) => (ys.length > 1 ? `${ys[0]}–${ys.at(-1)}` : `${ys[0]}`);
+const holders = Object.keys(W).filter((id) => W[id] === recordMax)
+  .map((id) => ({ id, years: eds.filter((e) => e.v.includes(id)).map((e) => e.year).sort((a, b) => a - b) }))
+  .sort((a, b) => a.years[0] - b.years[0]);
 const neverWon = Object.keys(F).filter((p) => !W[p]).length;
 const first = eds.at(-1), last = eds[0];
 const mx = Math.max(1, ...top.map((p) => W[p] + (F[p] || 0)));
@@ -57,10 +62,13 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) =>
       </div>
       {best && (
         <div class="record">
-          <small>Record de titres</small>
-          <b>{W[best]}</b>
-          <a href={url.player(P(best))}>{P(best).name}</a>
-          <small>{bestYears.length > 1 ? `de ${bestYears[0]} à ${bestYears.at(-1)}` : `en ${bestYears[0]}`}</small>
+          <small>Record de titres{holders.length > 1 && ` · ${holders.length} à égalité`}</small>
+          <b>{recordMax}</b>
+          {holders.length === 1 ? (
+            <><a href={url.player(P(holders[0].id))}>{P(holders[0].id).name}</a><small>{holders[0].years.length > 1 ? `de ${holders[0].years[0]} à ${holders[0].years.at(-1)}` : `en ${holders[0].years[0]}`}</small></>
+          ) : (
+            <ul class="holders">{holders.map((h) => <li><a href={url.player(P(h.id))}>{P(h.id).name}</a> <small>{span(h.years)}</small></li>)}</ul>
+          )}
         </div>
       )}
     </div>
