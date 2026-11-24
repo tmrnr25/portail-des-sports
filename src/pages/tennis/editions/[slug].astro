@@ -1,5 +1,4 @@
 ---
-import Logo from "../../../components/Logo.astro";
 import Base from "../../../layouts/Base.astro";
 import { editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
 export function getStaticPaths() {
@@ -18,7 +17,7 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
 <Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
   <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${S.color} 85%,#fff),color-mix(in srgb,${S.color} 85%,#000))`}>
     <div class="wrap">
-      <Logo src={c.logo} ratio={c.logoRatio} bg={c.logoBg} alt={`Logo ${c.name}`} fallback={initials(c.name)} />
+      <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
       <div>
         <div class="crumb"><a href="/tennis/">Tennis</a> › <a href={url.comp(c)}>{c.name}</a> › {e.year}</div>
         <h1>{c.name} {e.year}</h1>
