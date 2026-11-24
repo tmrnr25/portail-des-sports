@@ -16,7 +16,13 @@ export const SURFACES = {
   "Indoor": { label: "Indoor", color: "var(--indoor)" },
   "Moquette": { label: "Moquette", color: "var(--moquette)" },
 };
-export const surf = (s) => SURFACES[s] || { label: s || "Surface inconnue", color: "var(--court)" };
+export const surf = (s) => (SURFACES[s] ? { ...SURFACES[s], known: true } : { label: s || "", color: "var(--court)", known: !!s });
+// Bandeau d'une page tournoi : couleur de la surface, or pour les Jeux olympiques
+export const isOlympic = (c) => c.category === "JO" || /olympi/i.test(c.name);
+export const heroBg = (c, S) => {
+  const col = isOlympic(c) ? "#c9a227" : S.color;
+  return `background:linear-gradient(160deg,color-mix(in srgb,${col} 85%,#fff),color-mix(in srgb,${col} 80%,#000))`;
+};
 
 export const ROLES = { V: "Titre", F: "Finale", SF: "Demi-finale", QF: "Quart" };
 const ROLE_KEYS = [["v", "V"], ["f", "F"], ["sf", "SF"], ["qf", "QF"]];

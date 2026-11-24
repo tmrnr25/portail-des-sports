@@ -69,7 +69,7 @@ const maxT = Math.max(1, ...top.map((x) => x.s.titles));
                 <div class="pic" style={`background:${surf(c.surface).color}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
                 <div class="body">
                   <h3>{c.name}</h3>
-                  <span class="chip"><i class="dot" style={`background:${surf(c.surface).color}`}></i>{surf(c.surface).label}</span>
+                  {c.surface && <span class="chip"><i class="dot" style={`background:${surf(c.surface).color}`}></i>{surf(c.surface).label}</span>}
                 </div>
               </a>
             ))}

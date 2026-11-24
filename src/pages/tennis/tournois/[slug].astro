@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { competitions, editionsByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
+import { heroBg, competitions, editionsByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return competitions.map((c) => ({ params: { slug: c.slug }, props: { c } }));
 }
@@ -43,7 +43,7 @@ const surfChanged = surfRuns.length > 1;
 const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) => P(id).name)].join(" | ").toLowerCase();
 ---
 <Base title={c.name} nav="tournois" description={`Palmarès et éditions de ${c.name}.`}>
-  <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${S.color} 85%,#fff),color-mix(in srgb,${S.color} 85%,#000))`}>
+  <header class="band hero" style={heroBg(c, S)}>
     <div class="wrap">
       <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
       <div>
@@ -51,7 +51,7 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) =>
         <h1>{c.name}</h1>
         <div class="tags">
           {c.category && <span>{c.category}</span>}
-          <span>{S.label}</span>
+          {S.known && <span>{S.label}</span>}
           {cityLines[0] && <span>{cityLines[0]}</span>}
           {c.zone && <span>{c.zone.emoji} {c.zone.name}</span>}
           {c.created && <span>Créé en {c.created}</span>}

@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
+import { heroBg, editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return editions.map((e) => ({ params: { slug: e.slug }, props: { e } }));
 }
@@ -15,7 +15,7 @@ const cols = [["Quarts de finale", e.qf, false], ["Demi-finales", e.sf, false], 
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
 ---
 <Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
-  <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${S.color} 85%,#fff),color-mix(in srgb,${S.color} 85%,#000))`}>
+  <header class="band hero" style={heroBg(c, S)}>
     <div class="wrap">
       <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Logo ${c.name}`} /> : initials(c.name)}</div>
       <div>
@@ -23,7 +23,7 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
         <h1>{c.name} {e.year}</h1>
         {dates && <p>{dates}.</p>}
         <div class="tags">
-          <span>{S.label}</span>
+          {S.known && <span>{S.label}</span>}
           {e.category && <span>{catLabel(e.category)}</span>}
           {e.name !== c.name && <span>Nom cette année-là : {e.name}</span>}
           <a href={url.comp(c)}>Toutes les éditions</a>

@@ -7,7 +7,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { TENNIS, COLS } from "./config.mjs";
-import { buildDataset } from "./lib.mjs";
+import { buildDataset, slugify } from "./lib.mjs";
 import { buildSportDataset, readSport } from "./sports.mjs";
 import { SPORTS } from "../src/sports/config.js";
 import { LOGO_BG } from "./logos.mjs";
@@ -156,6 +156,14 @@ for (const [s, w] of report) {
 }
 
 // ---------- images ----------
+// Choix forcé du fond d'un logo (scripts/logos.mjs) : nom exact d'abord, sinon début du nom.
+const FORCED = Object.entries(LOGO_BG).map(([k, v]) => [slugify(k), v]);
+function forcedBg(slug) {
+  const exact = FORCED.find(([k]) => k === slug);
+  if (exact) return exact[1];
+  const start = FORCED.filter(([k]) => slug.startsWith(k + "-") || slug.startsWith(k)).sort((a, b) => b[0].length - a[0].length)[0];
+  return start ? start[1] : undefined;
+}
 function tennisJobs(ds) {
   return [
     ...ds.players.map((p) => ({ item: p, key: "photo", dir: "joueurs", kind: "photo" })),
@@ -195,7 +203,7 @@ async function processImages(jobs) {
         await sharp(buf).rotate().resize(360, 360, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
       } else {
-        const { logo, bg } = await prepareLogo(buf, LOGO_BG[`${dir.split("/").pop()}/${item.slug}`]);
+        const { logo, bg } = await prepareLogo(buf, forcedBg(item.slug));
         // Le logo occupe environ 72 % du carré : il garde de l'air tout autour.
         await sharp({ create: { width: 512, height: 512, channels: 3, background: bg } })
           .composite([{ input: logo, gravity: "center" }]).webp({ quality: 82 }).toFile(`${base}.webp`);
