@@ -10,6 +10,7 @@ import { TENNIS, COLS } from "./config.mjs";
 import { buildDataset } from "./lib.mjs";
 import { buildSportDataset, readSport } from "./sports.mjs";
 import { SPORTS } from "../src/sports/config.js";
+import { LOGO_BG } from "./logos.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const DATA = path.join(ROOT, "src/data");
@@ -194,16 +195,15 @@ async function processImages(jobs) {
         await sharp(buf).rotate().resize(360, 360, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
       } else {
-        const bg = await logoBackground(buf);
+        const { logo, bg } = await prepareLogo(buf, LOGO_BG[`${dir.split("/").pop()}/${item.slug}`]);
         // Le logo occupe environ 72 % du carré : il garde de l'air tout autour.
-        const inner = await sharp(buf).rotate().resize(368, 368, { fit: "inside" }).flatten({ background: bg }).toBuffer();
         await sharp({ create: { width: 512, height: 512, channels: 3, background: bg } })
-          .composite([{ input: inner, gravity: "center" }]).webp({ quality: 82 }).toFile(`${base}.webp`);
+          .composite([{ input: logo, gravity: "center" }]).webp({ quality: 82 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
         item[key + "Bg"] = `rgb(${bg.r},${bg.g},${bg.b})`;
       }
       ok++;
-    } catch { miss++; }
+    } catch (err) { miss++; if (process.env.DEBUG_IMG) console.warn("image", item.slug, err.message); }
   };
   const queue = jobs.slice();
   await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) await run(queue.shift()); }));
@@ -211,39 +211,66 @@ async function processImages(jobs) {
 }
 
 /**
- * Couleur de fond du carré d'un logo :
- * - logo posé sur un fond de couleur (bord opaque) : on prolonge ce fond ;
- * - logo sans fond (bord transparent) : une teinte claire de sa couleur principale
- *   (ou un fond sombre si le logo est lui-même très clair).
+ * Prépare un logo pour son carré et choisit la couleur du fond, toujours prise DANS le logo :
+ * - un choix forcé (scripts/logos.mjs) : « blanc » ou la couleur du logo la plus proche de l'indication ;
+ * - sinon, si le logo est posé sur un fond de couleur : ce fond ;
+ * - sinon, la couleur du logo qui couvre la plus grande surface tout en laissant le reste du logo bien visible ;
+ * - à défaut : blanc.
+ * Un fond blanc qui entoure le logo est rendu transparent, pour que la couleur choisie l'entoure proprement.
  */
-async function logoBackground(buf) {
-  const { data, info } = await sharp(buf).rotate().resize(64, 64, { fit: "fill" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const n = info.width;
-  let edgeTransparent = 0, edgeTotal = 0;
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
-    if (x > 1 && x < n - 2 && y > 1 && y < n - 2) continue;
-    edgeTotal++; if (data[(y * n + x) * 4 + 3] < 32) edgeTransparent++;
+async function prepareLogo(buf, forced) {
+  const WHITE = { r: 255, g: 255, b: 255, alpha: 1 };
+  const HINTS = { orange: [225, 110, 40], vert: [30, 120, 55], bleu: [30, 80, 180], rouge: [200, 30, 45], jaune: [240, 200, 40], violet: [100, 45, 135], noir: [10, 10, 10], gris: [128, 128, 128] };
+  const { data, info } = await sharp(buf).rotate().resize(368, 368, { fit: "inside" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height, px = (i) => [data[i], data[i + 1], data[i + 2], data[i + 3]];
+  const isWhite = (i) => data[i + 3] > 200 && data[i] > 232 && data[i + 1] > 232 && data[i + 2] > 232;
+  const isClear = (i) => data[i + 3] < 32;
+  // bords
+  let edgeWhite = 0, edgeClear = 0, edgeN = 0;
+  for (let x = 0; x < W; x++) for (const y of [0, H - 1]) { const i = (y * W + x) * 4; edgeN++; if (isWhite(i)) edgeWhite++; if (isClear(i)) edgeClear++; }
+  for (let y = 0; y < H; y++) for (const x of [0, W - 1]) { const i = (y * W + x) * 4; edgeN++; if (isWhite(i)) edgeWhite++; if (isClear(i)) edgeClear++; }
+  // fond blanc autour du logo -> transparent (remplissage depuis les bords)
+  if (edgeWhite / edgeN > 0.5) {
+    const seen = new Uint8Array(W * H), stack = [];
+    for (let x = 0; x < W; x++) stack.push(x, (H - 1) * W + x);
+    for (let y = 0; y < H; y++) stack.push(y * W, y * W + W - 1);
+    while (stack.length) {
+      const p = stack.pop(); if (seen[p]) continue; seen[p] = 1;
+      const i = p * 4; if (!(isWhite(i) || isClear(i))) continue;
+      data[i + 3] = 0;
+      const x = p % W, y = (p / W) | 0;
+      if (x > 0) stack.push(p - 1); if (x < W - 1) stack.push(p + 1); if (y > 0) stack.push(p - W); if (y < H - 1) stack.push(p + W);
+    }
   }
-  if (edgeTransparent / edgeTotal < 0.5) return edgeColor(buf);
-  // couleur principale du logo (pixels visibles, hors blanc et gris)
-  const groups = new Map();
-  let light = 0, visible = 0;
+  const opaqueEdge = edgeClear / edgeN < 0.5 && edgeWhite / edgeN <= 0.5;
+  // palette du logo (pixels visibles)
+  const groups = new Map(); let visible = 0;
   for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] < 128) continue;
-    visible++;
-    const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
-    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-    if (mx > 225 && mn > 225) { light++; continue; }
-    if (mx - mn < 24) continue;
-    const k = `${r >> 5},${g >> 5},${b >> 5}`;
-    const gr = groups.get(k) || { n: 0, r: 0, g: 0, b: 0 };
-    gr.n++; gr.r += r; gr.g += g; gr.b += b; groups.set(k, gr);
+    if (data[i + 3] < 128) continue; visible++;
+    const k = `${data[i] >> 4},${data[i + 1] >> 4},${data[i + 2] >> 4}`;
+    const g = groups.get(k) || { n: 0, r: 0, g: 0, b: 0 }; g.n++; g.r += data[i]; g.g += data[i + 1]; g.b += data[i + 2]; groups.set(k, g);
   }
-  if (visible && light / visible > 0.6) return { r: 28, g: 36, b: 48, alpha: 1 }; // logo blanc : fond sombre
-  const best = [...groups.values()].sort((a, b) => b.n - a.n)[0];
-  if (!best) return { r: 244, g: 244, b: 242, alpha: 1 };
-  const tint = (v) => Math.round(255 - (255 - v / best.n) * 0.14); // 14 % de la couleur, 86 % de blanc
-  return { r: tint(best.r), g: tint(best.g), b: tint(best.b), alpha: 1 };
+  // regroupe les nuances proches
+  const raw = [...groups.values()].map((g) => ({ n: g.n, c: [g.r / g.n, g.g / g.n, g.b / g.n] })).sort((a, b) => b.n - a.n);
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const palette = [];
+  for (const g of raw) { const m = palette.find((p) => dist(p.c, g.c) < 48); if (m) m.n += g.n; else palette.push({ ...g }); }
+  palette.forEach((p) => (p.share = visible ? p.n / visible : 0));
+  const rgb = (c) => ({ r: Math.round(c[0]), g: Math.round(c[1]), b: Math.round(c[2]), alpha: 1 });
+  const out = async (bg) => ({ bg, logo: await sharp(data, { raw: { width: W, height: H, channels: 4 } }).flatten({ background: bg }).png().toBuffer() });
+  // 1. choix forcé
+  if (forced) {
+    if (forced === "blanc") return out(WHITE);
+    const target = HINTS[forced];
+    const cand = palette.filter((p) => p.share > 0.02).sort((a, b) => dist(a.c, target) - dist(b.c, target))[0];
+    return out(cand ? rgb(cand.c) : WHITE);
+  }
+  // 2. logo sur fond de couleur : on prolonge ce fond
+  if (opaqueEdge) return out(await edgeColor(buf));
+  // 3. couleur du logo la plus étendue, si le reste du logo reste bien visible
+  const isNeutral = (c) => Math.max(...c) - Math.min(...c) < 24;
+  const cand = palette.find((p) => !isNeutral(p.c) && p.share >= 0.08 && p.share <= 0.6);
+  return out(cand ? rgb(cand.c) : WHITE);
 }
 
 /** Couleur dominante du pourtour de l'image (blanc si le bord est transparent). */
