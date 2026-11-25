@@ -31,12 +31,19 @@ st.awards.forEach((a) => (awardCounts[a.label] = (awardCounts[a.label] || 0) + 1
 const usedKeys = Object.keys(POS).filter((k) => st.counts[k]);
 const otherGroup = Object.keys(cfg.groups).find((g) => g !== x.group);
 const teams = (x.teams || []).map((id) => s.ent.get(id)).filter(Boolean);
+// Chiffres clés (le cyclisme a ses propres règles, voir src/sports/config.js)
+const kc = cfg.entityKpis || {};
+const AW = s.awardWord;
+const catWins = (cat) => wins.filter((r) => s.compById.get(r.e.compId)?.category === cat).length;
 const kpis = [
   [st.wins, st.wins > 1 ? "victoires" : "victoire", "gold"],
   [st.podiums, st.podiums > 1 ? "podiums" : "podium", ""],
-  ...usedKeys.filter((k) => !POS[k].win).map((k) => [st.counts[k], POS[k].kpi[st.counts[k] > 1 ? 1 : 0], ""]),
-  ...Object.entries(awardCounts).map(([l, n]) => [n, l, ""]),
+  ...(kc.winsByCategory || []).map(([cat, one, many]) => { const n = catWins(cat); return [n, n > 1 ? many : one, ""]; }),
+  ...usedKeys.filter((k) => !POS[k].win && !(kc.hide || []).includes(k)).map((k) => [st.counts[k], POS[k].kpi[st.counts[k] > 1 ? 1 : 0], ""]),
+  ...(kc.awardsTotal ? [[st.awards.length, st.awards.length > 1 ? AW.many : AW.one, ""]] : Object.entries(awardCounts).map(([l, n]) => [n, l, ""])),
 ].filter(([n], i) => (i < 1 && st.results.length) || n > 0);
+const showCat = cfg.showCategoryInResults && res.some((r) => s.compById.get(r.e.compId)?.category);
+const catOf = (c) => (c?.category && c.category !== "❌" ? c.category : "");
 const posLabel = (k) => POS[k].label;
 ---
 <Base title={x.name} nav={cfg.key} description={`Palmarès : ${x.name}.`}>
@@ -99,12 +106,13 @@ const posLabel = (k) => POS[k].label;
           </div>
         )}
         <table class="stack" id="res">
-          <thead><tr><th>Saison</th><th>{cfg.compWord.one[0].toUpperCase() + cfg.compWord.one.slice(1)}</th><th>Résultat</th><th>Vainqueur</th></tr></thead>
+          <thead><tr><th>Saison</th><th>{cfg.compWord.one[0].toUpperCase() + cfg.compWord.one.slice(1)}</th>{showCat && <th>Type de course</th>}<th>Résultat</th><th>Vainqueur</th></tr></thead>
           <tbody>
             {res.map(({ e, k }) => { const c = s.compById.get(e.compId); const grp = s.groupOfPos(k); const winK = s.usedPositions([e]).find((p) => POS[p].win && s.groupOfPos(p) === grp); return (
               <tr data-r={k}>
                 <td class="y"><a href={s.url.edition(e)}>{seasonLabel(e)}</a></td>
                 <td><a href={s.url.comp(c)}>{c.name}</a></td>
+                {showCat && <td>{catOf(c) ? <span class="cat" style={`--cat:${s.compTheme({ category: c.category }).color}`}>{catOf(c)}</span> : <span class="muted">—</span>}</td>}
                 <td><span class={`pill ${POS[k].cls}`}>{posLabel(k)}</span></td>
                 <td>{POS[k].win ? <span class="muted">—</span> : (e.pos[winK] || []).map((id, j) => { const w = s.ent.get(id); return <>{j > 0 && ", "}<a href={s.url.entity(w)}>{w.name}</a></>; })}</td>
               </tr>
@@ -119,10 +127,10 @@ const posLabel = (k) => POS[k].label;
   {st.awards.length > 0 && (
     <section class="band flush">
       <div class="wrap">
-        <h2>Distinctions</h2>
-        <p class="sub">{plural(st.awards.length, "distinction")} individuelle{st.awards.length > 1 ? "s" : ""}.</p>
+        <h2>{AW.title}</h2>
+        <p class="sub">{plural(st.awards.length, AW.one, AW.many)}{cfg.awardWord ? "" : ` individuelle${st.awards.length > 1 ? "s" : ""}`}.</p>
         <table class="stack" style="max-width:860px">
-          <thead><tr><th>Saison</th><th>{cfg.compWord.one[0].toUpperCase() + cfg.compWord.one.slice(1)}</th><th>Distinction</th></tr></thead>
+          <thead><tr><th>Saison</th><th>{cfg.compWord.one[0].toUpperCase() + cfg.compWord.one.slice(1)}</th><th>{AW.col}</th></tr></thead>
           <tbody>
             {st.awards.slice().sort((a, b) => b.e.year - a.e.year).map(({ e, label }) => { const c = s.compById.get(e.compId); return (
               <tr><td class="y"><a href={s.url.edition(e)}>{seasonLabel(e)}</a></td><td><a href={s.url.comp(c)}>{c.name}</a></td><td>{label}</td></tr>

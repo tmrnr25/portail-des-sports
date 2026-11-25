@@ -45,7 +45,7 @@ const cats = groupComps(s.comps);
             <h2>Dernières éditions</h2>
             <p class="sub">Les plus récentes de la base.</p>
             <table class="stack">
-              <thead><tr><th>Édition</th><th>Vainqueur</th><th>Finaliste ou 2e</th></tr></thead>
+              <thead><tr><th>Édition</th><th>Vainqueur</th><th>{s.secondLabel}</th></tr></thead>
               <tbody>
                 {recent.map((e) => { const ks = firstPos(e); return (
                   <tr>
@@ -61,7 +61,7 @@ const cats = groupComps(s.comps);
             {groupsTop.filter((x) => x.top.length).map(({ g, label, fem, awardsOnly, top }) => (
               <div style="margin-bottom:28px">
                 <h2>{label} les plus {awardsOnly ? (fem ? "distinguées" : "distingués") : fem ? "titrées" : "titrés"}</h2>
-                <p class="sub">{awardsOnly ? "Nombre de distinctions individuelles." : "Victoires, puis podiums."}</p>
+                <p class="sub">{awardsOnly ? `Nombre de ${s.awardWord.many}.` : "Victoires, puis podiums."}</p>
                 <div class="rows">
                   {top.map(({ x, st }) => awardsOnly ? (
                     <div class="r"><span><a href={s.url.entity(x)}>{x.name}</a></span><div class="bar"><i style={`width:${(st.awards.length / maxW(top, true)) * 100}%;background:${cfg.color}`}></i></div><b>{st.awards.length}</b></div>
@@ -83,11 +83,11 @@ const cats = groupComps(s.comps);
           <p class="sub">Classées par type, comme dans ta base Notion.</p>
           {cats.map((g) => (
             <>
-              <h3 style="font-size:24px;margin:22px 0 12px">{g.title}</h3>
+              <h3 class="cat-title" style={`--cat:${s.compTheme({ category: g.items[0].category }).color}`}>{g.title}</h3>
               <div class="grid">
                 {g.items.map((c) => (
                   <a class="card" href={s.url.comp(c)}>
-                    <div class="pic" style={`background:${cfg.color}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
+                    <div class="pic" style={`background:${c.logoBg || s.compTheme(c).color}`}>{c.logo ? <img src={c.logo} alt="" loading="lazy" /> : initials(c.name)}</div>
                     <div class="body">
                       <h3>{c.name}</h3>
                       <small>{[c.zone && `${c.zone.emoji} ${c.zone.name}`, plural((s.editionsByComp.get(c.id) || []).length, "édition")].filter(Boolean).join(" · ")}</small>

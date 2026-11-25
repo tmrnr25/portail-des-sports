@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { SPORTS, POS, getSport, initials, seasonLabel, frDate } from "../../../lib/sport.js";
+import { SPORTS, POS, getSport, initials, seasonLabel, frDate, heroBg } from "../../../lib/sport.js";
 export function getStaticPaths() {
   return SPORTS.flatMap((cfg) => getSport(cfg.key).editions.map((e) => ({ params: { sport: cfg.key, slug: e.slug }, props: { e } })));
 }
@@ -17,9 +17,10 @@ const mainKeys = keys.filter((k) => s.groupOfPos(k) === "main");
 const secondKeys = keys.filter((k) => s.groupOfPos(k) === "second");
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
 const pic = (x) => x.photo;
+const theme = s.compTheme(c);
 ---
 <Base title={`${c.name} ${seasonLabel(e)}`} nav={cfg.key} description={`Résultats : ${c.name} ${seasonLabel(e)}.`}>
-  <header class="band hero" style={`background:linear-gradient(160deg,color-mix(in srgb,${cfg.color} 85%,#fff),color-mix(in srgb,${cfg.color} 85%,#000))`}>
+  <header class={`band hero${theme.dark ? " ink-dark" : ""}`} style={`background:${heroBg(theme.color)}`}>
     <div class="wrap">
       <div class="art" style={c.logoBg ? `background:${c.logoBg}` : ""}>{c.logo ? <img src={c.logo} alt={`Image ${c.name}`} /> : initials(c.name)}</div>
       <div>
@@ -79,9 +80,9 @@ const pic = (x) => x.photo;
       )}
       {e.awards.length > 0 && (
         <div style="margin-top:32px">
-          <h2>Distinctions</h2>
+          <h2>{s.awardWord.title}</h2>
           <table class="stack" style="max-width:760px">
-            <thead><tr><th>Distinction</th><th>Lauréat</th></tr></thead>
+            <thead><tr><th>{s.awardWord.col}</th><th>Lauréat</th></tr></thead>
             <tbody>
               {e.awards.map((a) => <tr><td>{a.label}</td><td>{a.ids.map((id, j) => { const x = s.ent.get(id); return <>{j > 0 && ", "}<a href={s.url.entity(x)}>{x.name}</a></>; })}</td></tr>)}
             </tbody>

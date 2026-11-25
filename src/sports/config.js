@@ -27,6 +27,25 @@ export const SPORTS = [
     color: "#b8452a",
     emoji: "🚴",
     compWord: { one: "course", many: "courses" },
+    // Libellés propres au cyclisme
+    awardWord: { one: "maillot distinctif", many: "maillots distinctifs", title: "Maillots distinctifs", col: "Maillot distinctif" },
+    secondLabel: "Deuxième",
+    showCategoryInResults: true, // colonne « Type de course » dans les résultats des coureurs
+    // Chiffres clés des fiches coureurs
+    entityKpis: {
+      hide: ["P2", "P3", "T5"], // pas de compteur pour ces places
+      winsByCategory: [["Grand Tour", "Grand Tour", "Grands Tours"], ["Monument", "Monument", "Monuments"]],
+      awardsTotal: true, // un seul compteur « Maillots distinctifs » au lieu d'un par maillot
+    },
+    // Couleurs des pages de courses : d'abord par nom (Grands Tours), sinon par type de course
+    compColors: {
+      byName: [
+        [/tour de france/, "#f2c200", "dark"], // jaune
+        [/giro|tour d.italie/, "#e2407a"], // rose
+        [/vuelta|tour d.espagne/, "#c8102e"], // rouge
+      ],
+      byCategory: { "Grand Tour": "#1d3a6e", Monument: "#5b3a8c", Classique: "#1f6f8b", Championnat: "#2e7d4f", Tour: "#c46a1b" },
+    },
     groups: {
       main: { path: "coureurs", label: "Coureurs", one: "coureur", photoKind: "photo" },
     },

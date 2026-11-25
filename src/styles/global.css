@@ -148,3 +148,12 @@ footer.site .wrap{border-top:1px solid var(--line);padding-top:16px}
  .stack td:empty{display:none}}
 @media(prefers-reduced-motion:no-preference){a.card{transition:border-color .15s}}
 @media(max-width:600px){nav.top .wrap{gap:0 16px;min-height:48px}nav.top .brand{font-size:18px;flex-basis:100%;padding:10px 0 0}nav.top a{padding:8px 0 10px}}
+
+/* héros sur fond clair (ex. jaune du Tour de France) */
+.hero.ink-dark,.hero.ink-dark .crumb a,.hero.ink-dark .tags>*,.hero.ink-dark .record a,.hero.ink-dark .art{color:#1f1800}
+.hero.ink-dark .tags>*,.hero.ink-dark .record,.hero.ink-dark .art{border-color:#1f180030;background:#ffffff40}
+/* titres de sections de compétitions, chacun avec sa couleur */
+.cat-title{font-size:24px;margin:22px 0 12px;display:flex;align-items:center;gap:10px}
+.cat-title::before{content:"";width:14px;height:14px;border-radius:4px;background:var(--cat)}
+.cat{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.cat::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--cat);flex:none}

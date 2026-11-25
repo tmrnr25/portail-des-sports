@@ -54,11 +54,23 @@ export function getSport(key) {
     // Positions réellement utilisées par une liste d'éditions, dans l'ordre de POS
     usedPositions: (eds) => Object.keys(POS).filter((k) => eds.some((e) => e.pos[k]?.length)),
     groupOfPos: (k) => (k.startsWith("C") ? "second" : "main"),
+    awardWord: cfg.awardWord || { one: "distinction", many: "distinctions", title: "Distinctions", col: "Distinction" },
+    secondLabel: cfg.secondLabel || "Finaliste ou 2e",
+    // Couleur (et encre du texte) d'une compétition
+    compTheme: (c) => {
+      const cc = cfg.compColors;
+      const n = norm(c?.name || "");
+      const hit = cc?.byName?.find(([re]) => re.test(n));
+      if (hit) return { color: hit[1], dark: hit[2] === "dark" };
+      return { color: cc?.byCategory?.[c?.category] || cfg.color, dark: false };
+    },
   };
   cache.set(key, s);
   return s;
 }
 
+const norm = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+export const heroBg = (color) => `linear-gradient(160deg,color-mix(in srgb,${color} 85%,#fff),color-mix(in srgb,${color} 85%,#000))`;
 export const seasonLabel = (e) => e.season || String(e.year);
 export const initials = (s) => String(s).replace(/🟥/g, "").split(/[\s-]+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 export const plural = (n, one, many) => `${n} ${n > 1 ? many || one + "s" : one}`;

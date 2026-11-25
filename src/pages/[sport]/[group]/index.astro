@@ -41,7 +41,7 @@ const hasResults = rows.some((r) => r.st.results.length);
             <span class="count" id="count">{plural(rows.length, gc.one)}</span>
           </div>
           <table class="stack" id="pl">
-            <thead><tr><th>Nom</th><th>Pays</th>{hasResults && <th class="num">Victoires</th>}{hasResults && <th class="num">Podiums</th>}{hasAwards && <th class="num">Distinctions</th>}</tr></thead>
+            <thead><tr><th>Nom</th><th>Pays</th>{hasResults && <th class="num">Victoires</th>}{hasResults && <th class="num">Podiums</th>}{hasAwards && <th class="num">{s.awardWord.title}</th>}</tr></thead>
             <tbody>
               {rows.map(({ x, st }) => (
                 <tr data-s={`${x.name} ${x.nat?.name || ""}`.toLowerCase()} data-f={x.retired ? "retraite" : "actif"}>
