@@ -48,6 +48,8 @@ export const isFinals = (e) => e.category === "Masters";
 export const isJO = (e) => e.category === "JO";
 export const catLabel = (c) => (c === "Masters" ? "ATP Finals" : c === "JO" ? "Jeux Olympiques" : c || "—");
 
+const MAIN_ED_CATS = ["Grand Chelem", "Masters 1000", "Masters", "JO", "ATP 500", "ATP 250"];
+
 // Index : éditions par compétition, résultats par joueur
 export const editionsByComp = new Map();
 export const resultsByPlayer = new Map();
@@ -72,6 +74,9 @@ export function playerStats(pid) {
     m1000: V.filter(isM1000).length,
     finals: V.filter(isFinals).length,
     jo: V.filter(isJO).length,
+    a500: V.filter((e) => e.category === "ATP 500").length,
+    a250: V.filter((e) => e.category === "ATP 250").length,
+    other: V.filter((e) => !MAIN_ED_CATS.includes(e.category)).length, // anciennes catégories, hors circuit…
     lostFinals: res.filter((x) => x.r === "F").length,
     semis: res.filter((x) => x.r === "SF").length,
     quarters: res.filter((x) => x.r === "QF").length,
@@ -143,4 +148,75 @@ export const url = {
   edition: (e) => `/tennis/editions/${e.slug}/`,
   player: (p) => `/tennis/joueurs/${p.slug}/`,
   players: "/tennis/joueurs/",
+  records: "/tennis/records/",
 };
+
+// ---------- Records et exploits ----------
+const when = (e) => e.start || `${e.year}`;
+const byDate = (a, b) => when(a).localeCompare(when(b));
+const nameOfComp = (id) => compById.get(id)?.name || "";
+
+// Séries de titres consécutifs sur un même tournoi (éditions successives de la base)
+export const streaks = [];
+for (const [cid, list] of editionsByComp) {
+  // Une édition sans vainqueur unique, ou un trou de plus de 2 ans dans la base, coupe la série
+  // (2 ans : une édition annulée, comme Wimbledon 2020, ne la coupe pas).
+  const eds = list.slice().sort(byDate);
+  let run = [];
+  const flush = () => { if (run.length >= 2) streaks.push({ pid: run[0].v[0], compId: cid, n: run.length, from: run[0], to: run.at(-1) }); };
+  for (const e of eds) {
+    if (e.v.length !== 1) { flush(); run = []; continue; }
+    if (run.length && run[0].v[0] === e.v[0] && e.year - run.at(-1).year <= 2) run.push(e);
+    else { flush(); run = [e]; }
+  }
+  flush();
+}
+streaks.sort((a, b) => b.n - a.n || byDate(a.from, b.from));
+export const streaksByPlayer = new Map();
+export const streaksByComp = new Map();
+for (const s of streaks) {
+  if (!streaksByPlayer.has(s.pid)) streaksByPlayer.set(s.pid, []);
+  streaksByPlayer.get(s.pid).push(s);
+  if (!streaksByComp.has(s.compId)) streaksByComp.set(s.compId, []);
+  streaksByComp.get(s.compId).push(s);
+}
+
+// Exploits en Grand Chelem
+const slamEds = editions.filter((e) => isGC(e) && e.v.length === 1 && slams.some((c) => c.id === e.compId)).sort(byDate);
+function slamFeats(pid) {
+  const won = slamEds.filter((e) => e.v[0] === pid);
+  if (!won.length) return [];
+  const feats = [];
+  const N = slams.length; // 4
+  // Grand Chelem en carrière : l'année où il gagne le dernier des quatre
+  const seen = new Set();
+  let career = null;
+  for (const e of won) { seen.add(e.compId); if (!career && seen.size === N) career = e; }
+  if (career) feats.push({ key: "career", label: "Grand Chelem en carrière", detail: `complété à ${nameOfComp(career.compId)} ${career.year}`, year: career.year, e: career });
+  // Grand Chelem calendaire : les quatre la même année
+  const byYear = new Map();
+  for (const e of won) { if (!byYear.has(e.year)) byYear.set(e.year, new Set()); byYear.get(e.year).add(e.compId); }
+  const cal = [...byYear].filter(([, s]) => s.size === N).map(([y]) => y);
+  if (cal.length) feats.push({ key: "calendar", label: "Grand Chelem calendaire", detail: cal.join(", "), year: cal[0] });
+  // Golden Slam en carrière : les quatre + l'or olympique
+  const gold = editions.filter((e) => isJO(e) && e.v.includes(pid)).sort(byDate);
+  if (career && gold.length) {
+    const y = Math.max(career.year, gold[0].year);
+    feats.push({ key: "golden", label: "Golden Slam en carrière", detail: `Grand Chelem en carrière + or olympique (${gold.map((e) => e.year).join(", ")})`, year: y });
+    if (cal.some((yy) => gold.some((g) => g.year === yy))) feats.push({ key: "golden-cal", label: "Golden Slam calendaire", detail: cal.filter((yy) => gold.some((g) => g.year === yy)).join(", "), year: cal[0] });
+  }
+  // Quatre Grands Chelems d'affilée (hors année calendaire)
+  let run = [];
+  const runs = [];
+  for (const e of slamEds) {
+    if (e.v[0] === pid) run.push(e);
+    else { if (run.length >= N) runs.push(run); run = []; }
+  }
+  if (run.length >= N) runs.push(run);
+  for (const r of runs) {
+    if (r.length === N && r.every((e) => e.year === r[0].year)) continue; // déjà compté en calendaire
+    feats.push({ key: "row", label: `${r.length} Grands Chelems d'affilée`, detail: `de ${nameOfComp(r[0].compId)} ${r[0].year} à ${nameOfComp(r.at(-1).compId)} ${r.at(-1).year}`, year: r.at(-1).year });
+  }
+  return feats;
+}
+export const featsByPlayer = new Map(players.map((p) => [p.id, slamFeats(p.id)]).filter(([, f]) => f.length));

@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural } from "../../../lib/tennis.js";
+import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return players.map((p) => ({ params: { slug: p.slug }, props: { p } }));
 }
@@ -27,14 +27,21 @@ if (allY.length) for (let y = Math.min(...allY); y <= Math.max(...allY); y++) se
 const ty = (y) => V.filter((e) => e.year === y).length;
 const tmax = Math.max(1, ...seasons.map(ty));
 const cats = [...new Set(res.map((x) => x.e.category).filter(Boolean))];
+// Titres par catégorie (catégorie de chaque édition, au moment où elle s'est jouée)
 const kpis = [
   [s.titles, s.titles > 1 ? "titres" : "titre", "gold"],
-  [s.gc, "Grands Chelems", "gold"],
-  [s.m1000, "Masters 1000", ""],
+  [s.gc, s.gc > 1 ? "Grands Chelems" : "Grand Chelem", "gold"],
   [s.finals, "ATP Finals", ""],
   [s.jo, "or olympique", ""],
-  [s.lostFinals, "finales perdues", ""],
+  [s.m1000, "Masters 1000", ""],
+  [s.a500, "ATP 500", ""],
+  [s.a250, "ATP 250", ""],
+  [s.other, s.other > 1 ? "autres titres" : "autre titre", "", "Anciennes catégories (avant 1990), Next Gen, hors circuit"],
+  [s.lostFinals, s.lostFinals > 1 ? "finales perdues" : "finale perdue", "lost"],
 ].filter(([n], i) => i < 2 || n > 0);
+// Exploits et séries
+const feats = featsByPlayer.get(p.id) || [];
+const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
 ---
 <Base title={p.name} nav="joueurs" description={`Palmarès de ${p.name}.`}>
   <header class="band hero" style="background:var(--nuit)">
@@ -54,9 +61,23 @@ const kpis = [
 
   <section class="band">
     <div class="wrap kpis">
-      {kpis.map(([n, l, cl]) => <div class={`kpi ${cl}`}><b>{n}</b><span>{l}</span></div>)}
+      {kpis.map(([n, l, cl, tip]) => <div class={`kpi ${cl}`} title={tip}><b>{n}</b><span>{l}</span></div>)}
     </div>
+    <p class="wrap kpi-note">Titres comptés selon la catégorie de l'édition l'année où elle s'est jouée.</p>
   </section>
+
+  {(feats.length > 0 || myStreaks.length > 0) && (
+    <section class="band flush">
+      <div class="wrap">
+        <h2>Exploits et séries</h2>
+        <p class="sub">Calculés à partir des éditions de la base. <a href={url.records}>Tous les records</a></p>
+        <ul class="feats">
+          {feats.map((f) => <li class="feat gold"><b>{f.label}</b><span>{f.detail}</span></li>)}
+          {myStreaks.map((x) => <li class="feat"><b>{x.n} titres d'affilée à <a href={url.comp(compById.get(x.compId))}>{compById.get(x.compId).name}</a></b><span>de {x.from.year} à {x.to.year}</span></li>)}
+        </ul>
+      </div>
+    </section>
+  )}
 
   {years.length > 0 && (
     <section class="band flush">

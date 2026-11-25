@@ -157,3 +157,21 @@ footer.site .wrap{border-top:1px solid var(--line);padding-top:16px}
 .cat-title::before{content:"";width:14px;height:14px;border-radius:4px;background:var(--cat)}
 .cat{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .cat::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--cat);flex:none}
+.kpi-note{margin-top:10px;font-size:12.5px;color:var(--mute)}
+.kpi.lost b{color:var(--mute)}
+.feats{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.feat b{font:700 16px/1.3 Barlow,system-ui,sans-serif}
+.wrap.kpi-note{margin-top:10px}
+.feat span{font-size:13.5px;color:var(--mute)}
+.feat.gold{border-color:color-mix(in srgb,var(--or) 55%,#fff);background:color-mix(in srgb,var(--or) 10%,var(--card))}
+.record .streak{margin-top:10px;padding-top:8px;border-top:1px solid #ffffff38;display:grid;gap:2px;font-size:15px}
+.record .streak small{display:inline;opacity:.8}
+.record .streak>small{display:block}
+.feat-groups{display:grid;gap:26px;margin-top:14px}
+.feat-groups h3{font-size:20px;margin:0 0 2px}
+.leaders{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.leaders>div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.leaders h3{font-size:18px;margin:0 0 8px}
+.leaders ol{margin:0;padding-left:22px;display:grid;gap:3px;font-size:15px}
+.leaders li b{float:right;font-variant-numeric:tabular-nums}

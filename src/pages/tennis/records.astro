@@ -1,0 +1,90 @@
+---
+import Base from "../../layouts/Base.astro";
+import { players, playerById, compById, statsById, featsByPlayer, streaks, url, plural } from "../../lib/tennis.js";
+const P = (id) => playerById.get(id);
+// Exploits en Grand Chelem, du plus rare au plus courant
+const FEATS = [
+  ["golden-cal", "Golden Slam calendaire", "Les quatre Grands Chelems et l'or olympique la même année."],
+  ["calendar", "Grand Chelem calendaire", "Les quatre Grands Chelems la même année."],
+  ["golden", "Golden Slam en carrière", "Les quatre Grands Chelems et l'or olympique sur l'ensemble de la carrière."],
+  ["row", "Quatre Grands Chelems d'affilée", "Quatre victoires de suite en Grand Chelem, à cheval sur deux saisons."],
+  ["career", "Grand Chelem en carrière", "Les quatre Grands Chelems au moins une fois. Classés par année d'achèvement."],
+];
+const featRows = FEATS.map(([key, title, sub]) => ({
+  title, sub,
+  rows: [...featsByPlayer].flatMap(([pid, fs]) => fs.filter((f) => f.key === key).map((f) => ({ p: P(pid), f }))).sort((a, b) => a.f.year - b.f.year),
+}));
+const longStreaks = streaks.filter((x) => x.n >= 4).slice(0, 25);
+// Titres par catégorie : les 10 premiers dans chacune
+const CATS = [["gc", "Grands Chelems"], ["finals", "ATP Finals"], ["m1000", "Masters 1000"], ["a500", "ATP 500"], ["a250", "ATP 250"], ["titles", "Tous titres"]];
+const leaders = CATS.map(([k, label]) => {
+  const list = players.map((p) => ({ p, n: statsById.get(p.id)[k] })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n || a.p.name.localeCompare(b.p.name));
+  const cut = list[9]?.n ?? 0;
+  return { label, list: list.filter((x) => x.n >= cut).slice(0, 15) };
+});
+---
+<Base title="Records du tennis" nav="tennis" description="Grand Chelem en carrière, Golden Slam, séries de titres et leaders par catégorie.">
+  <header class="band hero noart" style="background:#24476b">
+    <div class="wrap">
+      <div>
+        <div class="crumb"><a href="/">Portail des sports</a> › <a href={url.tennis}>Tennis</a> › Records</div>
+        <h1>Records et exploits</h1>
+        <p>Calculés à partir des éditions de la base. Une édition manquante peut fausser une série.</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="band">
+    <div class="wrap">
+      <h2>Exploits en Grand Chelem</h2>
+      <div class="feat-groups">
+        {featRows.map((g) => (
+          <div>
+            <h3>{g.title}</h3>
+            <p class="sub">{g.sub}</p>
+            {g.rows.length === 0 ? <p class="muted">Aucun joueur dans la base.</p> : (
+              <ul class="feats">
+                {g.rows.map(({ p, f }) => <li class="feat gold"><b><a href={url.player(p)}>{p.name}</a></b><span>{f.detail}</span></li>)}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="band flush">
+    <div class="wrap">
+      <h2>Plus longues séries sur un même tournoi</h2>
+      <p class="sub">Titres remportés sur des éditions successives ; une édition annulée (comme Wimbledon 2020) ne coupe pas la série. À partir de 4 titres.</p>
+      <table class="stack">
+        <thead><tr><th>Titres d'affilée</th><th>Joueur</th><th>Tournoi</th><th>Années</th></tr></thead>
+        <tbody>
+          {longStreaks.map((x) => (
+            <tr>
+              <td data-l="Titres d'affilée"><b>{x.n}</b></td>
+              <td data-l="Joueur"><a href={url.player(P(x.pid))}>{P(x.pid).name}</a></td>
+              <td data-l="Tournoi"><a href={url.comp(compById.get(x.compId))}>{compById.get(x.compId).name}</a></td>
+              <td data-l="Années">{x.from.year}–{x.to.year}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="band flush">
+    <div class="wrap">
+      <h2>Les plus titrés par catégorie</h2>
+      <p class="sub">Selon la catégorie de chaque édition l'année où elle s'est jouée. Les 10 premiers, ex æquo compris.</p>
+      <div class="leaders">
+        {leaders.map((g) => (
+          <div>
+            <h3>{g.label}</h3>
+            <ol>{g.list.map((x) => <li><a href={url.player(x.p)}>{x.p.name}</a><b>{x.n}</b></li>)}</ol>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>

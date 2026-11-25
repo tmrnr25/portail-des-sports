@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { roundLabels, isOlympic, heroBg, competitions, editionsByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
+import { roundLabels, isOlympic, heroBg, competitions, editionsByComp, streaksByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return competitions.map((c) => ({ params: { slug: c.slug }, props: { c } }));
 }
@@ -17,6 +17,9 @@ const span = (ys) => (ys.length > 1 ? `${ys[0]}–${ys.at(-1)}` : `${ys[0]}`);
 const holders = Object.keys(W).filter((id) => W[id] === recordMax)
   .map((id) => ({ id, years: eds.filter((e) => e.v.includes(id)).map((e) => e.year).sort((a, b) => a - b) }))
   .sort((a, b) => a.years[0] - b.years[0]);
+// Plus longue série de titres consécutifs (au moins 2)
+const st = streaksByComp.get(c.id) || [];
+const bestRun = st.filter((x) => x.n === st[0]?.n);
 const neverWon = Object.keys(F).filter((p) => !W[p]).length;
 const first = eds.at(-1), last = eds[0];
 const mx = Math.max(1, ...top.map((p) => W[p] + (F[p] || 0)));
@@ -70,6 +73,12 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf, ...e.r16].m
             <><a href={url.player(P(holders[0].id))}>{P(holders[0].id).name}</a><small>{holders[0].years.length > 1 ? `de ${holders[0].years[0]} à ${holders[0].years.at(-1)}` : `en ${holders[0].years[0]}`}</small></>
           ) : (
             <ul class="holders">{holders.map((h) => <li><a href={url.player(P(h.id))}>{P(h.id).name}</a> <small>{span(h.years)}</small></li>)}</ul>
+          )}
+          {bestRun.length > 0 && (
+            <div class="streak">
+              <small>Plus longue série : {bestRun[0].n} titres d'affilée</small>
+              {bestRun.map((x) => <span><a href={url.player(P(x.pid))}>{P(x.pid).name}</a> <small>{x.from.year}–{x.to.year}</small></span>)}
+            </div>
           )}
         </div>
       )}
