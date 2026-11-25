@@ -175,3 +175,8 @@ footer.site .wrap{border-top:1px solid var(--line);padding-top:16px}
 .leaders h3{font-size:18px;margin:0 0 8px}
 .leaders ol{margin:0;padding-left:22px;display:grid;gap:3px;font-size:15px}
 .leaders li b{float:right;font-variant-numeric:tabular-nums}
+.cat-hist{margin:-6px 0 14px;font-size:13.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 14px}
+.cat-hist small{opacity:.85}
+table.hist{border:0;background:none}
+table.hist td{border:0;padding:3px 0;font-size:14.5px}
+table.hist td:first-child{color:var(--mute);white-space:nowrap;padding-right:14px;font-variant-numeric:tabular-nums}

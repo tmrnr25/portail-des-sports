@@ -63,6 +63,7 @@ const maxT = Math.max(1, ...top.map((x) => x.s.titles));
         <>
           <div class="tgroup">
           <h3 style="font-size:24px;margin:22px 0 12px">{g.title}</h3>
+          {g.history && <p class="cat-hist">Anciens noms : {g.history.slice(0, -2).map(([y, n]) => <span>{n} <small>({y})</small></span>)}</p>}
           <div class="grid">
             {g.items.map((c) => (
               <a class="card" href={url.comp(c)} data-s={`${c.name} ${c.city || ""} ${c.zone?.name || ""}`.toLowerCase()}>

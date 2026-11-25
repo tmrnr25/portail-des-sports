@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { players, playerById, compById, statsById, featsByPlayer, streaks, url, plural } from "../../lib/tennis.js";
+import { players, playerById, compById, statsById, featsByPlayer, streaks, url, plural, CAT_HISTORY } from "../../lib/tennis.js";
 const P = (id) => playerById.get(id);
 // Exploits en Grand Chelem, du plus rare au plus courant
 const FEATS = [
@@ -76,12 +76,26 @@ const leaders = CATS.map(([k, label]) => {
   <section class="band flush">
     <div class="wrap">
       <h2>Les plus titrés par catégorie</h2>
-      <p class="sub">Selon la catégorie de chaque édition l'année où elle s'est jouée. Les 10 premiers, ex æquo compris.</p>
+      <p class="sub">Selon la catégorie de chaque édition l'année où elle s'est jouée. Les 10 premiers, ex æquo compris. <a href="#categories">Anciens noms des catégories</a></p>
       <div class="leaders">
         {leaders.map((g) => (
           <div>
             <h3>{g.label}</h3>
             <ol>{g.list.map((x) => <li><a href={url.player(x.p)}>{x.p.name}</a><b>{x.n}</b></li>)}</ol>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+  <section class="band flush" id="categories">
+    <div class="wrap">
+      <h2>Les catégories et leurs anciens noms</h2>
+      <p class="sub">Le site utilise les noms mis en place en 2009 pour toutes les années. Voici comment ces catégories s'appelaient avant. Avant 1990, les tournois relevaient du circuit Grand Prix (Super Series, Regular Series…) ou du circuit WCT, gardés sous leur nom d'origine.</p>
+      <div class="leaders">
+        {Object.entries(CAT_HISTORY).map(([cat, rows]) => (
+          <div>
+            <h3>{cat}</h3>
+            <table class="hist"><tbody>{rows.map(([y, n]) => <tr><td>{y}</td><td>{n}</td></tr>)}</tbody></table>
           </div>
         ))}
       </div>

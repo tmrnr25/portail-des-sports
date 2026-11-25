@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer } from "../../../lib/tennis.js";
+import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer, catHistoryText } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return players.map((p) => ({ params: { slug: p.slug }, props: { p } }));
 }
@@ -33,9 +33,9 @@ const kpis = [
   [s.gc, s.gc > 1 ? "Grands Chelems" : "Grand Chelem", "gold"],
   [s.finals, "ATP Finals", ""],
   [s.jo, "or olympique", ""],
-  [s.m1000, "Masters 1000", ""],
-  [s.a500, "ATP 500", ""],
-  [s.a250, "ATP 250", ""],
+  [s.m1000, "Masters 1000", "", catHistoryText("Masters 1000")],
+  [s.a500, "ATP 500", "", catHistoryText("ATP 500")],
+  [s.a250, "ATP 250", "", catHistoryText("ATP 250")],
   [s.superS, "Super Series", ""],
   [s.regularS, "Regular Series", ""],
   [s.other, s.other > 1 ? "autres titres" : "autre titre", "", "Autres anciennes catégories (WCT, Grand Prix…), Next Gen, hors circuit"],
@@ -65,7 +65,7 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
     <div class="wrap kpis">
       {kpis.map(([n, l, cl, tip]) => <div class={`kpi ${cl}`} title={tip}><b>{n}</b><span>{l}</span></div>)}
     </div>
-    <p class="wrap kpi-note">Titres comptés selon la catégorie de l'édition l'année où elle s'est jouée.</p>
+    <p class="wrap kpi-note">Titres comptés selon la catégorie de l'édition l'année où elle s'est jouée. Les noms Masters 1000, ATP 500 et ATP 250 datent de 2009 et sont utilisés pour toutes les années : <a href={`${url.records}#categories`}>voir les anciens noms</a>.</p>
   </section>
 
   {(feats.length > 0 || myStreaks.length > 0) && (

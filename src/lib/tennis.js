@@ -99,6 +99,14 @@ export const slams = competitions
   .sort((a, b) => a.m - b.m)
   .map((x) => x.c);
 
+// Anciens noms des catégories ATP. La base utilise partout les noms mis en place en 2009.
+export const CAT_HISTORY = {
+  "Masters 1000": [["1990–1992", "ATP Championship Series Single Week"], ["1993–1999", "ATP Super 9"], ["2000–2003", "ATP Tennis Masters Series"], ["2004–2008", "ATP Masters Series"], ["2009–2018", "ATP World Tour Masters 1000"], ["depuis 2019", "ATP Masters 1000"]],
+  "ATP 500": [["1990–1997", "ATP Championship Series"], ["1998–2008", "ATP International Series Gold"], ["2009–2018", "ATP World Tour 500"], ["depuis 2019", "ATP 500"]],
+  "ATP 250": [["1990–1997", "ATP World Series"], ["1998–2008", "ATP International Series"], ["2009–2018", "ATP World Tour 250"], ["depuis 2019", "ATP 250"]],
+};
+export const catHistoryText = (cat) => (CAT_HISTORY[cat] ? CAT_HISTORY[cat].map(([y, n]) => `${y} : ${n}`).join(" · ") : "");
+
 // Ordre d'affichage des catégories de compétitions (comme les vues Notion)
 export const COMP_GROUPS = [
   { title: "Grands Chelems", match: (c) => c.category === "Grand Chelem" },
@@ -129,7 +137,7 @@ export function groupCompetitions() {
   return COMP_GROUPS.map((g) => {
     const items = [...left].filter(g.match);
     items.forEach((c) => left.delete(c));
-    return { title: g.title, items };
+    return { title: g.title, items, history: CAT_HISTORY[g.title] };
   }).filter((g) => g.items.length);
 }
 
