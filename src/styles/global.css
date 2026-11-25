@@ -157,4 +157,3 @@ footer.site .wrap{border-top:1px solid var(--line);padding-top:16px}
 .cat-title::before{content:"";width:14px;height:14px;border-radius:4px;background:var(--cat)}
 .cat{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .cat::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--cat);flex:none}
-.tools .seg+.seg{margin-left:10px}

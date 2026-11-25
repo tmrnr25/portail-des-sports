@@ -108,10 +108,7 @@ const posLabel = (k) => POS[k].label;
               </div>
             )}
             {cats.length > 1 && (
-              <div class="seg" id="segc" aria-label="Filtrer par type de course">
-                <button data-c="all" aria-pressed="true">Toutes les courses</button>
-                {cats.map((k) => <button data-c={k} aria-pressed="false">{catPlural[k] || k}</button>)}
-              </div>
+              <select id="cat" aria-label="Type de course"><option value="all">Tous types de course</option>{cats.map((k) => <option value={k}>{catPlural[k] || k}</option>)}</select>
             )}
             <span class="count" id="count">{plural(res.length, "résultat")}</span>
           </div>
@@ -165,14 +162,14 @@ const posLabel = (k) => POS[k].label;
         for (const tr of rows) { const ok = (f.r === "all" || tr.dataset.r === f.r) && (f.c === "all" || tr.dataset.c === f.c); tr.hidden = !ok; if (ok) n++; }
         ct.textContent = `${n} résultat${n > 1 ? "s" : ""}`; none.hidden = n > 0;
       };
-      for (const [id, key] of [["seg", "r"], ["segc", "c"]]) {
-        const seg = document.getElementById(id); if (!seg) continue;
-        seg.addEventListener("click", (ev) => {
-          const b = ev.target.closest("button"); if (!b) return;
-          seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-          f[key] = b.dataset[key]; apply();
-        });
-      }
+      const seg = document.getElementById("seg");
+      if (seg) seg.addEventListener("click", (ev) => {
+        const b = ev.target.closest("button"); if (!b) return;
+        seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+        f.r = b.dataset.r; apply();
+      });
+      const cat = document.getElementById("cat");
+      if (cat) cat.addEventListener("change", () => { f.c = cat.value; apply(); });
     }
   </script>
 </Base>
