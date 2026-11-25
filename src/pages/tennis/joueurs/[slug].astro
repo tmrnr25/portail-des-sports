@@ -36,7 +36,9 @@ const kpis = [
   [s.m1000, "Masters 1000", ""],
   [s.a500, "ATP 500", ""],
   [s.a250, "ATP 250", ""],
-  [s.other, s.other > 1 ? "autres titres" : "autre titre", "", "Anciennes catégories (avant 1990), Next Gen, hors circuit"],
+  [s.superS, "Super Series", ""],
+  [s.regularS, "Regular Series", ""],
+  [s.other, s.other > 1 ? "autres titres" : "autre titre", "", "Autres anciennes catégories (WCT, Grand Prix…), Next Gen, hors circuit"],
   [s.lostFinals, s.lostFinals > 1 ? "finales perdues" : "finale perdue", "lost"],
 ].filter(([n], i) => i < 2 || n > 0);
 // Exploits et séries

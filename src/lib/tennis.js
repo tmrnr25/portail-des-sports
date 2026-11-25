@@ -48,7 +48,7 @@ export const isFinals = (e) => e.category === "Masters";
 export const isJO = (e) => e.category === "JO";
 export const catLabel = (c) => (c === "Masters" ? "ATP Finals" : c === "JO" ? "Jeux Olympiques" : c || "—");
 
-const MAIN_ED_CATS = ["Grand Chelem", "Masters 1000", "Masters", "JO", "ATP 500", "ATP 250"];
+const MAIN_ED_CATS = ["Grand Chelem", "Masters 1000", "Masters", "JO", "ATP 500", "ATP 250", "Super Series", "Regular Series"];
 
 // Index : éditions par compétition, résultats par joueur
 export const editionsByComp = new Map();
@@ -76,6 +76,8 @@ export function playerStats(pid) {
     jo: V.filter(isJO).length,
     a500: V.filter((e) => e.category === "ATP 500").length,
     a250: V.filter((e) => e.category === "ATP 250").length,
+    superS: V.filter((e) => e.category === "Super Series").length,
+    regularS: V.filter((e) => e.category === "Regular Series").length,
     other: V.filter((e) => !MAIN_ED_CATS.includes(e.category)).length, // anciennes catégories, hors circuit…
     lostFinals: res.filter((x) => x.r === "F").length,
     semis: res.filter((x) => x.r === "SF").length,
