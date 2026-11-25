@@ -230,3 +230,33 @@ function slamFeats(pid) {
   return feats;
 }
 export const featsByPlayer = new Map(players.map((p) => [p.id, slamFeats(p.id)]).filter(([, f]) => f.length));
+
+// ---------- Face-à-face en finale ----------
+// Chaque finale avec un vainqueur et un finaliste uniques (finale olympique comprise)
+export const finals = editions.filter((e) => e.v.length === 1 && e.f.length === 1);
+export const h2hByPlayer = new Map(); // pid -> Map(adversaire -> { w, l, eds: [{ e, won }] })
+const addH2H = (a, b, e, won) => {
+  if (!h2hByPlayer.has(a)) h2hByPlayer.set(a, new Map());
+  const m = h2hByPlayer.get(a);
+  if (!m.has(b)) m.set(b, { w: 0, l: 0, eds: [] });
+  const x = m.get(b);
+  won ? x.w++ : x.l++;
+  x.eds.push({ e, won });
+};
+for (const e of finals) { addH2H(e.v[0], e.f[0], e, true); addH2H(e.f[0], e.v[0], e, false); }
+// Rivalités : les paires qui se sont le plus affrontées en finale
+export const rivalries = [];
+for (const [a, m] of h2hByPlayer) for (const [b, x] of m) if (a < b) rivalries.push({ a, b, n: x.w + x.l, w: x.w, l: x.l, eds: x.eds });
+rivalries.sort((p, q) => q.n - p.n);
+
+// ---------- Bilan par surface ----------
+export const surfaceOf = (e) => e.surface || compById.get(e.compId)?.surface || "";
+export function surfaceRecord(pid) {
+  const by = {};
+  for (const { e, r } of resultsByPlayer.get(pid) || []) {
+    const k = surfaceOf(e) || "?";
+    const s = (by[k] ||= { V: 0, F: 0, SF: 0, QF: 0, R16: 0 });
+    s[r]++;
+  }
+  return by;
+}

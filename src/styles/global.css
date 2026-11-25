@@ -180,3 +180,24 @@ footer.site .wrap{border-top:1px solid var(--line);padding-top:16px}
 table.hist{border:0;background:none}
 table.hist td{border:0;padding:3px 0;font-size:14.5px}
 table.hist td:first-child{color:var(--mute);white-space:nowrap;padding-right:14px;font-variant-numeric:tabular-nums}
+/* Bilan par surface */
+.surf-rec .sdot{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--s);margin-right:8px}
+.surf-rec td.num b{font-size:16px}
+.surf-rec .mini{display:inline-block;height:8px;border-radius:2px;margin-left:8px;vertical-align:middle;min-width:0}
+.surf-rec tfoot td{font-weight:700;border-top:2px solid var(--line);border-bottom:0}
+/* Face-à-face en finale */
+.h2h{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.h2h details{border-bottom:1px solid var(--line)}
+.h2h details:last-child{border-bottom:0}
+.h2h summary{display:grid;grid-template-columns:minmax(0,1fr) 90px 60px 120px;gap:14px;align-items:center;padding:10px 16px;cursor:pointer;list-style:none}
+.h2h summary::-webkit-details-marker{display:none}
+.h2h summary:hover{background:var(--soft)}
+.h2h .n{color:var(--mute);font-size:14px}
+.h2h .score{font:700 18px "Barlow Condensed",sans-serif;text-align:right;font-variant-numeric:tabular-nums}
+.h2h .score.up{color:var(--or-ink)}
+.h2h .bar{height:8px;background:var(--argent);border-radius:4px;overflow:hidden}
+.h2h .bar i{display:block;height:100%;background:var(--or)}
+.h2h ul{list-style:none;margin:0;padding:4px 16px 12px;display:grid;gap:5px;font-size:14.5px}
+@media (max-width:640px){.h2h summary{grid-template-columns:minmax(0,1fr) 50px;}.h2h .n,.h2h .bar{display:none}}
+.surf-rec td.num{white-space:nowrap}
+.surf-rec small{margin-left:4px}

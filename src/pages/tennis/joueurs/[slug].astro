@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer, catHistoryText } from "../../../lib/tennis.js";
+import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer, catHistoryText, surfaceRecord, h2hByPlayer, SURFACES } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return players.map((p) => ({ params: { slug: p.slug }, props: { p } }));
 }
@@ -15,11 +15,21 @@ const years = [];
 if (gsYears.length) for (let y = Math.min(...gsYears); y <= Math.max(...gsYears); y++) years.push(y);
 const gsCell = (c, y) => gsRes.find((x) => x.e.compId === c.id && x.e.year === y);
 const AB = { V: "V", F: "F", SF: "½", QF: "¼", R16: "⅛" };
-// surfaces
-const bySurf = {};
-V.forEach((e) => { const k = e.surface || compById.get(e.compId).surface || "?"; bySurf[k] = (bySurf[k] || 0) + 1; });
-const surfKeys = Object.keys(bySurf).sort((a, b) => bySurf[b] - bySurf[a]);
-const smax = Math.max(1, ...Object.values(bySurf));
+// Bilan par surface : titres, finales jouées (et bilan), demi-finales atteintes
+const sr = surfaceRecord(p.id);
+const SORD = Object.keys(SURFACES);
+const surfRows = Object.entries(sr)
+  .map(([k, x]) => ({ k, V: x.V, F: x.V + x.F, L: x.F, SF: x.V + x.F + x.SF }))
+  .sort((a, b) => b.V - a.V || b.F - a.F || (SORD.indexOf(a.k) + 1 || 99) - (SORD.indexOf(b.k) + 1 || 99));
+const surfTot = surfRows.reduce((t, r) => ({ V: t.V + r.V, F: t.F + r.F, L: t.L + r.L, SF: t.SF + r.SF }), { V: 0, F: 0, L: 0, SF: 0 });
+const smax = Math.max(1, ...surfRows.map((r) => r.V));
+const pct = (w, n) => (n ? `${Math.round((w / n) * 100)} %` : "—");
+// Face-à-face en finale
+const h2h = [...(h2hByPlayer.get(p.id) || [])]
+  .map(([id, x]) => ({ o: playerById.get(id), ...x, n: x.w + x.l }))
+  .filter((x) => x.o)
+  .sort((a, b) => b.n - a.n || b.w - a.w || a.o.name.localeCompare(b.o.name));
+const edLabel = (e) => `${compById.get(e.compId)?.name || e.name} ${e.year}`;
 // saisons
 const allY = res.map((x) => x.e.year);
 const seasons = [];
@@ -104,16 +114,34 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
     </section>
   )}
 
+  {surfRows.length > 0 && (
+    <section class="band flush">
+      <div class="wrap">
+        <div>
+          <h2>Bilan par surface</h2>
+          <p class="sub">Selon la surface de chaque édition. Finales jouées avec le bilan victoires–défaites, demi-finales atteintes (titres et finales compris).</p>
+          <table class="stack surf-rec">
+            <thead><tr><th>Surface</th><th class="num">Titres</th><th class="num">Finales</th><th class="num">Bilan en finale</th><th class="num">Demies</th></tr></thead>
+            <tbody>
+              {surfRows.map((r) => (
+                <tr>
+                  <td><span class="sdot" style={`--s:${surf(r.k).color}`}></span>{surf(r.k).label || "Non renseignée"}</td>
+                  <td class="num"><b>{r.V}</b><i class="mini" style={`width:${(r.V / smax) * 48}px;background:${surf(r.k).color}`}></i></td>
+                  <td class="num">{r.F}</td>
+                  <td class="num">{r.F ? <>{r.V}–{r.L} <small class="muted">({pct(r.V, r.F)})</small></> : "—"}</td>
+                  <td class="num">{r.SF}</td>
+                </tr>
+              ))}
+            </tbody>
+            {surfRows.length > 1 && <tfoot><tr><td>Total</td><td class="num"><b>{surfTot.V}</b></td><td class="num">{surfTot.F}</td><td class="num">{surfTot.F ? <>{surfTot.V}–{surfTot.L} <small class="muted">({pct(surfTot.V, surfTot.F)})</small></> : "—"}</td><td class="num">{surfTot.SF}</td></tr></tfoot>}
+          </table>
+        </div>
+      </div>
+    </section>
+  )}
   {V.length > 0 && (
     <section class="band flush">
-      <div class="wrap cols wide">
-        <div>
-          <h2>Titres par surface</h2>
-          <p class="sub">Selon la surface de chaque édition.</p>
-          <div class="rows">
-            {surfKeys.map((k) => <div class="r"><span>{surf(k).label}</span><div class="bar"><i style={`width:${(bySurf[k] / smax) * 100}%;background:${surf(k).color}`}></i></div><b>{bySurf[k]}</b></div>)}
-          </div>
-        </div>
+      <div class="wrap">
         <div>
           <h2>Titres par saison</h2>
           <p class="sub">En or, les saisons avec au moins un Grand Chelem.</p>
@@ -121,6 +149,28 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
             {seasons.map((y) => { const n = ty(y); const g = V.some((e) => e.year === y && isGC(e)); return <div title={`${y} : ${plural(n, "titre")}`}><span>{n || ""}</span><i class={g ? "g" : ""} style={`height:${(n / tmax) * 85}%`}></i></div>; })}
           </div>
           <div class="yl">{seasons.map((y) => <span>{y % 5 === 0 || y === seasons[0] || y === seasons.at(-1) ? String(y).slice(2) : ""}</span>)}</div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {h2h.length > 0 && (
+    <section class="band flush">
+      <div class="wrap">
+        <h2>Face-à-face en finale</h2>
+        <p class="sub">Ses adversaires en finale, du plus souvent affronté au moins souvent. Cliquez sur une ligne pour voir les finales.</p>
+        <div class="h2h">
+          {h2h.map((x) => (
+            <details>
+              <summary>
+                <span class="who"><a href={url.player(x.o)}>{x.o.name}</a>{x.o.nat && <small> {x.o.nat.emoji}</small>}</span>
+                <span class="n">{plural(x.n, "finale")}</span>
+                <span class={`score ${x.w > x.l ? "up" : x.w < x.l ? "down" : ""}`}>{x.w}–{x.l}</span>
+                <span class="bar"><i style={`width:${(x.w / x.n) * 100}%`}></i></span>
+              </summary>
+              <ul>{x.eds.slice().sort((a, b) => (b.e.start || `${b.e.year}`).localeCompare(a.e.start || `${a.e.year}`)).map(({ e, won }) => <li><span class={`pill ${won ? "V" : "F"}`}>{won ? "Gagnée" : "Perdue"}</span> <a href={url.edition(e)}>{edLabel(e)}</a> <small class="muted">{surf(e.surface || compById.get(e.compId)?.surface).label}</small></li>)}</ul>
+            </details>
+          ))}
         </div>
       </div>
     </section>

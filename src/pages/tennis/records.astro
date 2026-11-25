@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { players, playerById, compById, statsById, featsByPlayer, streaks, url, plural, CAT_HISTORY } from "../../lib/tennis.js";
+import { players, playerById, compById, statsById, featsByPlayer, streaks, url, plural, CAT_HISTORY, rivalries } from "../../lib/tennis.js";
 const P = (id) => playerById.get(id);
 // Exploits en Grand Chelem, du plus rare au plus courant
 const FEATS = [
@@ -14,6 +14,7 @@ const featRows = FEATS.map(([key, title, sub]) => ({
   title, sub,
   rows: [...featsByPlayer].flatMap(([pid, fs]) => fs.filter((f) => f.key === key).map((f) => ({ p: P(pid), f }))).sort((a, b) => a.f.year - b.f.year),
 }));
+const topRiv = rivalries.filter((r) => P(r.a) && P(r.b)).slice(0, 15).map((r) => (r.w >= r.l ? r : { ...r, a: r.b, b: r.a, w: r.l, l: r.w }));
 const longStreaks = streaks.filter((x) => x.n >= 4).slice(0, 25);
 // Titres par catégorie : les 10 premiers dans chacune
 const CATS = [["gc", "Grands Chelems"], ["finals", "ATP Finals"], ["m1000", "Masters 1000"], ["a500", "ATP 500"], ["a250", "ATP 250"], ["superS", "Super Series"], ["regularS", "Regular Series"], ["titles", "Tous titres"]];
@@ -68,6 +69,26 @@ const leaders = CATS.map(([k, label]) => {
               <td data-l="Années">{x.from.year}–{x.to.year}</td>
             </tr>
           ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="band flush">
+    <div class="wrap">
+      <h2>Les finales les plus jouées</h2>
+      <p class="sub">Les duels les plus fréquents en finale, tous tournois confondus.</p>
+      <table class="stack">
+        <thead><tr><th>Finales</th><th>Duel</th><th>Bilan</th><th>Période</th></tr></thead>
+        <tbody>
+          {topRiv.map((r) => { const ys = r.eds.map((x) => x.e.year); return (
+            <tr>
+              <td><b>{r.n}</b></td>
+              <td><a href={url.player(P(r.a))}>{P(r.a).name}</a> – <a href={url.player(P(r.b))}>{P(r.b).name}</a></td>
+              <td>{r.w}–{r.l}</td>
+              <td>{Math.min(...ys)}–{Math.max(...ys)}</td>
+            </tr>
+          ); })}
         </tbody>
       </table>
     </div>
