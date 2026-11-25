@@ -81,7 +81,7 @@ export const frDate = (s, withYear = false) =>
   s ? new Date(s + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", ...(withYear ? { year: "numeric" } : {}) }) : "";
 
 // Regroupement des compétitions par catégorie, dans un ordre lisible
-const CAT_ORDER = ["Coupe", "Championnat", "Grand Tour", "Monument", "Classique", "Tour", "Grand Prix"];
+const CAT_ORDER = ["Coupe", "Grand Tour", "Monument", "Championnat", "Classique", "Tour", "Grand Prix"];
 export function groupComps(comps) {
   const by = new Map();
   for (const c of comps) {
