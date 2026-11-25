@@ -59,6 +59,7 @@ export function getSport(key) {
     // Couleur (et encre du texte) d'une compétition
     compTheme: (c) => {
       const cc = cfg.compColors;
+      if (cc?.fromLogo && c?.logoAccent) return { color: c.logoAccent, dark: isLight(c.logoAccent) };
       const n = norm(c?.name || "");
       const hit = cc?.byName?.find(([re]) => re.test(n));
       if (hit) return { color: hit[1], dark: hit[2] === "dark" };
@@ -69,6 +70,8 @@ export function getSport(key) {
   return s;
 }
 
+// couleur claire -> texte foncé par-dessus
+const isLight = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.04 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.3; };
 const norm = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 export const heroBg = (color) => `linear-gradient(160deg,color-mix(in srgb,${color} 85%,#fff),color-mix(in srgb,${color} 85%,#000))`;
 export const seasonLabel = (e) => e.season || String(e.year);

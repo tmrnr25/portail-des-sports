@@ -44,6 +44,9 @@ const kpis = [
 ].filter(([n], i) => (i < 1 && st.results.length) || n > 0);
 const showCat = cfg.showCategoryInResults && res.some((r) => s.compById.get(r.e.compId)?.category);
 const catOf = (c) => (c?.category && c.category !== "❌" ? c.category : "");
+const CAT_ORDER = ["Grand Tour", "Monument", "Championnat", "Tour", "Classique"];
+const cats = showCat ? [...new Set(res.map((r) => catOf(s.compById.get(r.e.compId)) || "Autres"))].sort((a, b) => (CAT_ORDER.indexOf(a) + 1 || 99) - (CAT_ORDER.indexOf(b) + 1 || 99)) : [];
+const catPlural = { "Grand Tour": "Grands Tours", Monument: "Monuments", Championnat: "Championnats", Tour: "Tours", Classique: "Classiques" };
 const posLabel = (k) => POS[k].label;
 ---
 <Base title={x.name} nav={cfg.key} description={`Palmarès : ${x.name}.`}>
@@ -96,12 +99,20 @@ const posLabel = (k) => POS[k].label;
       <div class="wrap">
         <h2>Tous les résultats</h2>
         <p class="sub">Chaque édition où {x.name} figure au classement.</p>
-        {usedKeys.length > 1 && (
+        {(usedKeys.length > 1 || cats.length > 1) && (
           <div class="tools">
-            <div class="seg" id="seg">
-              <button data-r="all" aria-pressed="true">Tout</button>
-              {usedKeys.map((k) => <button data-r={k} aria-pressed="false">{posLabel(k)}</button>)}
-            </div>
+            {usedKeys.length > 1 && (
+              <div class="seg" id="seg" aria-label="Filtrer par résultat">
+                <button data-r="all" aria-pressed="true">Tout</button>
+                {usedKeys.map((k) => <button data-r={k} aria-pressed="false">{posLabel(k)}</button>)}
+              </div>
+            )}
+            {cats.length > 1 && (
+              <div class="seg" id="segc" aria-label="Filtrer par type de course">
+                <button data-c="all" aria-pressed="true">Toutes les courses</button>
+                {cats.map((k) => <button data-c={k} aria-pressed="false">{catPlural[k] || k}</button>)}
+              </div>
+            )}
             <span class="count" id="count">{plural(res.length, "résultat")}</span>
           </div>
         )}
@@ -109,7 +120,7 @@ const posLabel = (k) => POS[k].label;
           <thead><tr><th>Saison</th><th>{cfg.compWord.one[0].toUpperCase() + cfg.compWord.one.slice(1)}</th>{showCat && <th>Type de course</th>}<th>Résultat</th><th>Vainqueur</th></tr></thead>
           <tbody>
             {res.map(({ e, k }) => { const c = s.compById.get(e.compId); const grp = s.groupOfPos(k); const winK = s.usedPositions([e]).find((p) => POS[p].win && s.groupOfPos(p) === grp); return (
-              <tr data-r={k}>
+              <tr data-r={k} data-c={catOf(c) || "Autres"}>
                 <td class="y"><a href={s.url.edition(e)}>{seasonLabel(e)}</a></td>
                 <td><a href={s.url.comp(c)}>{c.name}</a></td>
                 {showCat && <td>{catOf(c) ? <span class="cat" style={`--cat:${s.compTheme({ category: c.category }).color}`}>{catOf(c)}</span> : <span class="muted">—</span>}</td>}
@@ -146,14 +157,20 @@ const posLabel = (k) => POS[k].label;
   )}
   <script is:inline>
     {
-      const seg = document.getElementById("seg");
-      if (seg) {
-        const rows = [...document.querySelectorAll("#res tbody tr")], ct = document.getElementById("count"), none = document.getElementById("none");
+      // deux filtres qui se combinent : résultat et type de course
+      const rows = [...document.querySelectorAll("#res tbody tr")], ct = document.getElementById("count"), none = document.getElementById("none");
+      const f = { r: "all", c: "all" };
+      const apply = () => {
+        let n = 0;
+        for (const tr of rows) { const ok = (f.r === "all" || tr.dataset.r === f.r) && (f.c === "all" || tr.dataset.c === f.c); tr.hidden = !ok; if (ok) n++; }
+        ct.textContent = `${n} résultat${n > 1 ? "s" : ""}`; none.hidden = n > 0;
+      };
+      for (const [id, key] of [["seg", "r"], ["segc", "c"]]) {
+        const seg = document.getElementById(id); if (!seg) continue;
         seg.addEventListener("click", (ev) => {
           const b = ev.target.closest("button"); if (!b) return;
           seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-          let n = 0; for (const tr of rows) { const ok = b.dataset.r === "all" || tr.dataset.r === b.dataset.r; tr.hidden = !ok; if (ok) n++; }
-          ct.textContent = `${n} résultat${n > 1 ? "s" : ""}`; none.hidden = n > 0;
+          f[key] = b.dataset[key]; apply();
         });
       }
     }

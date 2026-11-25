@@ -37,8 +37,10 @@ export const SPORTS = [
       winsByCategory: [["Grand Tour", "Grand Tour", "Grands Tours"], ["Monument", "Monument", "Monuments"]],
       awardsTotal: true, // un seul compteur « Maillots distinctifs » au lieu d'un par maillot
     },
-    // Couleurs des pages de courses : d'abord par nom (Grands Tours), sinon par type de course
+    // Couleurs des pages de courses : d'abord la couleur principale du logo,
+    // sinon par nom (Grands Tours), sinon par type de course
     compColors: {
+      fromLogo: true,
       byName: [
         [/tour de france/, "#f2c200", "dark"], // jaune
         [/giro|tour d.italie/, "#e2407a"], // rose

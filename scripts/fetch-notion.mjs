@@ -212,12 +212,13 @@ async function processImages(jobs) {
         await sharp(buf).rotate().resize(360, 360, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
       } else {
-        const { logo, bg } = await prepareLogo(buf, forcedBg(item.slug));
+        const { logo, bg, accent } = await prepareLogo(buf, forcedBg(item.slug));
         // Le logo occupe environ 72 % du carré : il garde de l'air tout autour.
         await sharp({ create: { width: 512, height: 512, channels: 3, background: bg } })
           .composite([{ input: logo, gravity: "center" }]).webp({ quality: 82 }).toFile(`${base}.webp`);
         item[key] = `/images/${dir}/${item.slug}.webp`;
         item[key + "Bg"] = `rgb(${bg.r},${bg.g},${bg.b})`;
+        if (accent) item[key + "Accent"] = "#" + [accent.r, accent.g, accent.b].map((v) => v.toString(16).padStart(2, "0")).join("");
       }
       ok++;
     } catch (err) { miss++; if (miss <= 3 || process.env.DEBUG_IMG) console.warn(`⚠ Image illisible (${item.slug}) : ${err.message}`); }
@@ -274,7 +275,11 @@ async function prepareLogo(buf, forced) {
   for (const g of raw) { const m = palette.find((p) => dist(p.c, g.c) < 48); if (m) m.n += g.n; else palette.push({ ...g }); }
   palette.forEach((p) => (p.share = visible ? p.n / visible : 0));
   const rgb = (c) => ({ r: Math.round(c[0]), g: Math.round(c[1]), b: Math.round(c[2]), alpha: 1 });
-  const out = async (bg) => ({ bg, logo: await sharp(data, { raw: { width: W, height: H, channels: 4 } }).flatten({ background: bg }).png().toBuffer() });
+  // couleur principale du logo (sert aux pages des courses) : la plus étendue parmi les couleurs franches
+  const isNeutral = (c) => Math.max(...c) - Math.min(...c) < 24;
+  const main = palette.find((p) => !isNeutral(p.c) && p.share >= 0.03);
+  const accent = main ? rgb(main.c) : null;
+  const out = async (bg) => ({ bg, accent, logo: await sharp(data, { raw: { width: W, height: H, channels: 4 } }).flatten({ background: bg }).png().toBuffer() });
   // 1. choix forcé
   if (forced) {
     if (forced === "blanc") return out(WHITE);
@@ -288,7 +293,6 @@ async function prepareLogo(buf, forced) {
   // 2. logo sur fond de couleur : on prolonge ce fond
   if (opaqueEdge) return out(await edgeColor(buf));
   // 3. couleur du logo la plus étendue, si le reste du logo reste bien visible
-  const isNeutral = (c) => Math.max(...c) - Math.min(...c) < 24;
   const cand = palette.find((p) => !isNeutral(p.c) && p.share >= 0.08 && p.share <= 0.6);
   return out(cand ? rgb(cand.c) : WHITE);
 }
