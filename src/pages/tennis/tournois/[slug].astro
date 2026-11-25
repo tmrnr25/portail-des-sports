@@ -32,7 +32,7 @@ const cityLines = (c.city || "").split("\n").map((s) => s.trim()).filter(Boolean
 // Colonnes du tableau : on ne garde que les tours renseignés au moins une fois
 const RL = roundLabels(c);
 const olympic = isOlympic(c);
-const COLS = [["v", RL.v], ["f", RL.f], ["sf", RL.sf], ["qf", RL.qf]].filter(([k]) => k === "v" || eds.some((e) => e[k].length));
+const COLS = [["v", RL.v], ["f", RL.f], ["sf", RL.sf], ["qf", RL.qf], ["r16", RL.r16]].filter(([k]) => k === "v" || eds.some((e) => e[k].length));
 // Historique des surfaces (d'après la surface de chaque édition)
 const surfRuns = [];
 eds.slice().reverse().forEach((e) => {
@@ -42,7 +42,7 @@ eds.slice().reverse().forEach((e) => {
 });
 const surfHistory = surfRuns.length > 1 ? surfRuns.slice().reverse().map((r, i) => (i === 0 ? `Depuis ${r.from} : ${surf(r.s).label}` : r.from === r.to ? `${r.from} : ${surf(r.s).label}` : `${r.from}-${r.to} : ${surf(r.s).label}`)) : [];
 const surfChanged = surfRuns.length > 1;
-const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf].map((id) => P(id).name)].join(" | ").toLowerCase();
+const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf, ...e.r16].map((id) => P(id).name)].join(" | ").toLowerCase();
 ---
 <Base title={c.name} nav="tournois" description={`Palmarès et éditions de ${c.name}.`}>
   <header class="band hero" style={heroBg(c, S)}>

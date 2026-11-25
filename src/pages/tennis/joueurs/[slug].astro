@@ -14,7 +14,7 @@ const gsYears = gsRes.map((x) => x.e.year);
 const years = [];
 if (gsYears.length) for (let y = Math.min(...gsYears); y <= Math.max(...gsYears); y++) years.push(y);
 const gsCell = (c, y) => gsRes.find((x) => x.e.compId === c.id && x.e.year === y);
-const AB = { V: "V", F: "F", SF: "½", QF: "¼" };
+const AB = { V: "V", F: "F", SF: "½", QF: "¼", R16: "⅛" };
 // surfaces
 const bySurf = {};
 V.forEach((e) => { const k = e.surface || compById.get(e.compId).surface || "?"; bySurf[k] = (bySurf[k] || 0) + 1; });
@@ -62,8 +62,8 @@ const kpis = [
     <section class="band flush">
       <div class="wrap">
         <h2>Grands Chelems, année par année</h2>
-        <p class="sub">Le tour atteint, à partir des quarts. Chaque case ouvre l'édition.</p>
-        <div class="legend"><span><i style="background:var(--or)"></i>Titre</span><span><i style="background:var(--argent)"></i>Finale</span><span><i style="background:var(--bronze)"></i>Demi-finale</span><span><i style="background:var(--qf)"></i>Quart de finale</span></div>
+        <p class="sub">Le tour atteint, à partir des quarts (des huitièmes quand ils sont renseignés). Chaque case ouvre l'édition.</p>
+        <div class="legend"><span><i style="background:var(--or)"></i>Titre</span><span><i style="background:var(--argent)"></i>Finale</span><span><i style="background:var(--bronze)"></i>Demi-finale</span><span><i style="background:var(--qf)"></i>Quart de finale</span>{gsRes.some((x) => x.r === "R16") && <span><i style="background:var(--r16)"></i>Huitième de finale</span>}</div>
         <div class="gs">
           <table>
             <thead><tr><th></th>{years.map((y) => <th>{String(y).slice(2)}</th>)}</tr></thead>
@@ -106,7 +106,7 @@ const kpis = [
   <section class="band flush">
     <div class="wrap">
       <h2>Tous ses résultats</h2>
-      <p class="sub">Chaque tournoi où il a atteint au moins les quarts de finale.</p>
+      <p class="sub">Chaque tournoi où il figure au tableau final renseigné dans la base{res.some((x) => x.r === "R16") ? " (à partir des huitièmes quand ils sont renseignés)" : ""}.</p>
       {res.length === 0 ? <p class="muted">Aucun résultat relié dans la base.</p> : (
         <>
           <div class="tools">
@@ -116,6 +116,7 @@ const kpis = [
               <button data-r="F" aria-pressed="false">Finales</button>
               <button data-r="SF" aria-pressed="false">Demies</button>
               <button data-r="QF" aria-pressed="false">Quarts</button>
+              {res.some((x) => x.r === "R16") && <button data-r="R16" aria-pressed="false">Huitièmes</button>}
             </div>
             <select id="cat" aria-label="Catégorie"><option value="all">Toutes catégories</option>{cats.map((c) => <option value={c}>{catLabel(c)}</option>)}</select>
             <span class="count" id="count">{plural(res.length, "résultat")}</span>

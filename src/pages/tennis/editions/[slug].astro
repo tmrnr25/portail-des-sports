@@ -14,7 +14,7 @@ const P = (id) => playerById.get(id);
 const RL = roundLabels(c);
 const olympic = isOlympic(c);
 const bronze = new Set(e.b || []);
-const cols = [[RL.qfCol, e.qf, false, "qf"], ["Demi-finales", e.sf, false, "sf"], [RL.fCol, e.f, false, "f"], [RL.vCol, e.v, true, "v"]].filter(([, ids, win]) => win || ids.length > 0);
+const cols = [[RL.r16Col, e.r16, false, "r16"], [RL.qfCol, e.qf, false, "qf"], ["Demi-finales", e.sf, false, "sf"], [RL.fCol, e.f, false, "f"], [RL.vCol, e.v, true, "v"]].filter(([, ids, win]) => win || ids.length > 0);
 const medal = (k, id) => (!olympic ? null : k === "v" ? "or" : k === "f" ? "argent" : k === "sf" && bronze.has(id) ? "bronze" : null);
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
 ---
@@ -38,7 +38,7 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
   <section class="band">
     <div class="wrap">
       <h2>Tableau final</h2>
-      <p class="sub">{e.qf.length ? (isGroupStage(c) ? "De la phase de groupe au titre." : "Des quarts au titre.") : e.sf.length ? "Des demi-finales au titre." : "La finale."} Chaque nom ouvre la fiche du joueur.{olympic && bronze.size > 0 && " Le rond de bronze indique le vainqueur du match pour la 3e place."}</p>
+      <p class="sub">{e.r16.length ? "Des huitièmes au titre." : e.qf.length ? (isGroupStage(c) ? "De la phase de groupe au titre." : "Des quarts au titre.") : e.sf.length ? "Des demi-finales au titre." : "La finale."} Chaque nom ouvre la fiche du joueur.{olympic && bronze.size > 0 && " Le rond de bronze indique le vainqueur du match pour la 3e place."}</p>
       <div class="draw" style={`--cols:${cols.length}`}>
         {cols.map(([title, ids, win, k]) => (
           <div class="col">

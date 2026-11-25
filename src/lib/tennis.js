@@ -3,7 +3,7 @@ import data from "../data/tennis.json";
 
 export const meta = data.meta;
 export const competitions = data.competitions;
-export const editions = data.editions; // triées de la plus récente à la plus ancienne
+export const editions = data.editions.map((e) => Object.assign(e, { r16: e.r16 || [], b: e.b || [] })); // triées de la plus récente à la plus ancienne
 export const players = data.players;
 
 export const compById = new Map(competitions.map((c) => [c.id, c]));
@@ -28,6 +28,8 @@ export const roundLabels = (c) => ({
   sf: "Demi-finalistes",
   qf: isGroupStage(c) ? "Phase de groupe" : "Quart-de-finalistes",
   qfCol: isGroupStage(c) ? "Phase de groupe" : "Quarts de finale",
+  r16: "Huitièmes de finaliste",
+  r16Col: "Huitièmes de finale",
   fCol: isOlympic(c) ? "Médaille d'argent" : "Finale",
   vCol: isOlympic(c) ? "Médaille d'or" : "Vainqueur",
 });
@@ -36,8 +38,8 @@ export const heroBg = (c, S) => {
   return `background:linear-gradient(160deg,color-mix(in srgb,${col} 85%,#fff),color-mix(in srgb,${col} 80%,#000))`;
 };
 
-export const ROLES = { V: "Titre", F: "Finale", SF: "Demi-finale", QF: "Quart" };
-const ROLE_KEYS = [["v", "V"], ["f", "F"], ["sf", "SF"], ["qf", "QF"]];
+export const ROLES = { V: "Titre", F: "Finale", SF: "Demi-finale", QF: "Quart", R16: "Huitième" };
+const ROLE_KEYS = [["v", "V"], ["f", "F"], ["sf", "SF"], ["qf", "QF"], ["r16", "R16"]];
 
 // Catégories d'édition (colonne « Catégorie » des éditions)
 export const isGC = (e) => e.category === "Grand Chelem";
@@ -73,6 +75,7 @@ export function playerStats(pid) {
     lostFinals: res.filter((x) => x.r === "F").length,
     semis: res.filter((x) => x.r === "SF").length,
     quarters: res.filter((x) => x.r === "QF").length,
+    r16: res.filter((x) => x.r === "R16").length,
   };
 }
 

@@ -70,7 +70,7 @@ export function buildDataset({ competitions, editions, players, zones }, meta) {
       id: e.id, compId, year, start: e.start || null, end: e.end || null,
       name: editionLabel(e.name) || e.name, surface: e.surface || null, category: e.category || null,
       v: keep(e.winner, "vainqueur"), f: keep(e.finalist, "finaliste"),
-      sf: keep(e.semi, "demi-finaliste"), qf: keep(e.quarter, "quart"), b: keep(e.bronze || [], "médaille de bronze"),
+      sf: keep(e.semi, "demi-finaliste"), qf: keep(e.quarter, "quart"), r16: keep(e.r16 || [], "huitième"), b: keep(e.bronze || [], "médaille de bronze"),
     });
   }
 
