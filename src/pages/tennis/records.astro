@@ -16,7 +16,7 @@ const featRows = FEATS.map(([key, title, sub]) => ({
 }));
 const longStreaks = streaks.filter((x) => x.n >= 4).slice(0, 25);
 // Titres par catégorie : les 10 premiers dans chacune
-const CATS = [["gc", "Grands Chelems"], ["finals", "ATP Finals"], ["m1000", "Masters 1000"], ["a500", "ATP 500"], ["a250", "ATP 250"], ["titles", "Tous titres"]];
+const CATS = [["gc", "Grands Chelems"], ["finals", "ATP Finals"], ["m1000", "Masters 1000"], ["a500", "ATP 500"], ["a250", "ATP 250"], ["superS", "Super Series"], ["regularS", "Regular Series"], ["titles", "Tous titres"]];
 const leaders = CATS.map(([k, label]) => {
   const list = players.map((p) => ({ p, n: statsById.get(p.id)[k] })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n || a.p.name.localeCompare(b.p.name));
   const cut = list[9]?.n ?? 0;
