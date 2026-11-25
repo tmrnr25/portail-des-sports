@@ -201,3 +201,13 @@ table.hist td:first-child{color:var(--mute);white-space:nowrap;padding-right:14p
 @media (max-width:640px){.h2h summary{grid-template-columns:minmax(0,1fr) 50px;}.h2h .n,.h2h .bar{display:none}}
 .surf-rec td.num{white-space:nowrap}
 .surf-rec small{margin-left:4px}
+/* Sous-menu des fiches */
+.subnav{position:sticky;top:56px;z-index:4;background:var(--card);border-bottom:1px solid var(--line);padding:0 max(5vw,16px)}
+.subnav .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.subnav a{flex:none;padding:12px 12px;font-size:14.5px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent;text-decoration:none}
+.subnav a:hover{color:var(--ink)}
+.subnav a[aria-current]{color:var(--ink);border-bottom-color:var(--or)}
+section[id]{scroll-margin-top:130px}
+html{scroll-behavior:smooth}
+button.more{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 18px;font:600 14.5px inherit;color:var(--ink);cursor:pointer}
+button.more:hover{background:var(--soft)}

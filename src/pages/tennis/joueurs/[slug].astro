@@ -29,6 +29,7 @@ const h2h = [...(h2hByPlayer.get(p.id) || [])]
   .map(([id, x]) => ({ o: playerById.get(id), ...x, n: x.w + x.l }))
   .filter((x) => x.o)
   .sort((a, b) => b.n - a.n || b.w - a.w || a.o.name.localeCompare(b.o.name));
+const H2H_MAX = 10;
 const edLabel = (e) => `${compById.get(e.compId)?.name || e.name} ${e.year}`;
 // saisons
 const allY = res.map((x) => x.e.year);
@@ -54,6 +55,15 @@ const kpis = [
 // Exploits et séries
 const feats = featsByPlayer.get(p.id) || [];
 const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
+// Sous-menu : seulement les sections présentes sur la fiche
+const SUBNAV = [
+  ["chiffres", "Chiffres", true],
+  ["exploits", "Exploits", feats.length > 0 || myStreaks.length > 0],
+  ["grands-chelems", "Grands Chelems", years.length > 0],
+  ["surfaces", "Surfaces et saisons", surfRows.length > 0 || V.length > 0],
+  ["face-a-face", "Face-à-face", h2h.length > 0],
+  ["resultats", "Résultats", true],
+].filter((x) => x[2]);
 ---
 <Base title={p.name} nav="joueurs" description={`Palmarès de ${p.name}.`}>
   <header class="band hero" style="background:var(--nuit)">
@@ -71,7 +81,13 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
     </div>
   </header>
 
-  <section class="band">
+  <nav class="subnav" aria-label="Sections de la fiche">
+    <div class="wrap">
+      {SUBNAV.map(([id, l]) => <a href={`#${id}`}>{l}</a>)}
+    </div>
+  </nav>
+
+  <section class="band" id="chiffres">
     <div class="wrap kpis">
       {kpis.map(([n, l, cl, tip]) => <div class={`kpi ${cl}`} title={tip}><b>{n}</b><span>{l}</span></div>)}
     </div>
@@ -79,7 +95,7 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
   </section>
 
   {(feats.length > 0 || myStreaks.length > 0) && (
-    <section class="band flush">
+    <section class="band flush" id="exploits">
       <div class="wrap">
         <h2>Exploits et séries</h2>
         <p class="sub">Calculés à partir des éditions de la base. <a href={url.records}>Tous les records</a></p>
@@ -92,7 +108,7 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
   )}
 
   {years.length > 0 && (
-    <section class="band flush">
+    <section class="band flush" id="grands-chelems">
       <div class="wrap">
         <h2>Grands Chelems, année par année</h2>
         <p class="sub">Le tour atteint, à partir des quarts (des huitièmes quand ils sont renseignés). Chaque case ouvre l'édition.</p>
@@ -114,54 +130,50 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
     </section>
   )}
 
-  {surfRows.length > 0 && (
-    <section class="band flush">
-      <div class="wrap">
-        <div>
-          <h2>Bilan par surface</h2>
-          <p class="sub">Selon la surface de chaque édition. Finales jouées avec le bilan victoires–défaites, demi-finales atteintes (titres et finales compris).</p>
-          <table class="stack surf-rec">
-            <thead><tr><th>Surface</th><th class="num">Titres</th><th class="num">Finales</th><th class="num">Bilan en finale</th><th class="num">Demies</th></tr></thead>
-            <tbody>
-              {surfRows.map((r) => (
-                <tr>
-                  <td><span class="sdot" style={`--s:${surf(r.k).color}`}></span>{surf(r.k).label || "Non renseignée"}</td>
-                  <td class="num"><b>{r.V}</b><i class="mini" style={`width:${(r.V / smax) * 48}px;background:${surf(r.k).color}`}></i></td>
-                  <td class="num">{r.F}</td>
-                  <td class="num">{r.F ? <>{r.V}–{r.L} <small class="muted">({pct(r.V, r.F)})</small></> : "—"}</td>
-                  <td class="num">{r.SF}</td>
-                </tr>
-              ))}
-            </tbody>
-            {surfRows.length > 1 && <tfoot><tr><td>Total</td><td class="num"><b>{surfTot.V}</b></td><td class="num">{surfTot.F}</td><td class="num">{surfTot.F ? <>{surfTot.V}–{surfTot.L} <small class="muted">({pct(surfTot.V, surfTot.F)})</small></> : "—"}</td><td class="num">{surfTot.SF}</td></tr></tfoot>}
-          </table>
-        </div>
-      </div>
-    </section>
-  )}
-  {V.length > 0 && (
-    <section class="band flush">
-      <div class="wrap">
-        <div>
-          <h2>Titres par saison</h2>
-          <p class="sub">En or, les saisons avec au moins un Grand Chelem.</p>
-          <div class="yrs">
-            {seasons.map((y) => { const n = ty(y); const g = V.some((e) => e.year === y && isGC(e)); return <div title={`${y} : ${plural(n, "titre")}`}><span>{n || ""}</span><i class={g ? "g" : ""} style={`height:${(n / tmax) * 85}%`}></i></div>; })}
+  {(surfRows.length > 0 || V.length > 0) && (
+    <section class="band flush" id="surfaces">
+      <div class="wrap cols wide">
+        {surfRows.length > 0 && (
+          <div>
+            <h2>Bilan par surface</h2>
+            <p class="sub">Selon la surface de chaque édition. Bilan en finale : victoires–défaites.</p>
+            <table class="stack surf-rec">
+              <thead><tr><th>Surface</th><th class="num">Titres</th><th class="num">Bilan en finale</th></tr></thead>
+              <tbody>
+                {surfRows.map((r) => (
+                  <tr>
+                    <td><span class="sdot" style={`--s:${surf(r.k).color}`}></span>{surf(r.k).label || "Non renseignée"}</td>
+                    <td class="num"><b>{r.V}</b><i class="mini" style={`width:${(r.V / smax) * 48}px;background:${surf(r.k).color}`}></i></td>
+                    <td class="num">{r.F ? <>{r.V}–{r.L} <small class="muted">({pct(r.V, r.F)})</small></> : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {surfRows.length > 1 && <tfoot><tr><td>Total</td><td class="num"><b>{surfTot.V}</b></td><td class="num">{surfTot.F ? <>{surfTot.V}–{surfTot.L} <small class="muted">({pct(surfTot.V, surfTot.F)})</small></> : "—"}</td></tr></tfoot>}
+            </table>
           </div>
-          <div class="yl">{seasons.map((y) => <span>{y % 5 === 0 || y === seasons[0] || y === seasons.at(-1) ? String(y).slice(2) : ""}</span>)}</div>
-        </div>
+        )}
+        {V.length > 0 && (
+          <div>
+            <h2>Titres par saison</h2>
+            <p class="sub">En or, les saisons avec au moins un Grand Chelem.</p>
+            <div class="yrs">
+              {seasons.map((y) => { const n = ty(y); const g = V.some((e) => e.year === y && isGC(e)); return <div title={`${y} : ${plural(n, "titre")}`}><span>{n || ""}</span><i class={g ? "g" : ""} style={`height:${(n / tmax) * 85}%`}></i></div>; })}
+            </div>
+            <div class="yl">{seasons.map((y) => <span>{y % 5 === 0 || y === seasons[0] || y === seasons.at(-1) ? String(y).slice(2) : ""}</span>)}</div>
+          </div>
+        )}
       </div>
     </section>
   )}
 
   {h2h.length > 0 && (
-    <section class="band flush">
+    <section class="band flush" id="face-a-face">
       <div class="wrap">
         <h2>Face-à-face en finale</h2>
         <p class="sub">Ses adversaires en finale, du plus souvent affronté au moins souvent. Cliquez sur une ligne pour voir les finales.</p>
-        <div class="h2h">
-          {h2h.map((x) => (
-            <details>
+        <div class="h2h" id="h2h">
+          {h2h.map((x, i) => (
+            <details hidden={i >= H2H_MAX}>
               <summary>
                 <span class="who"><a href={url.player(x.o)}>{x.o.name}</a>{x.o.nat && <small> {x.o.nat.emoji}</small>}</span>
                 <span class="n">{plural(x.n, "finale")}</span>
@@ -172,11 +184,12 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
             </details>
           ))}
         </div>
+        {h2h.length > H2H_MAX && <button class="more" id="h2h-more" type="button" data-n={h2h.length - H2H_MAX}>Voir plus ({h2h.length - H2H_MAX} autres adversaires)</button>}
       </div>
     </section>
   )}
 
-  <section class="band flush">
+  <section class="band flush" id="resultats">
     <div class="wrap">
       <h2>Tous ses résultats</h2>
       <p class="sub">Chaque tournoi où il figure au tableau final renseigné dans la base{res.some((x) => x.r === "R16") ? " (à partir des huitièmes quand ils sont renseignés)" : ""}.</p>
@@ -216,6 +229,24 @@ const myStreaks = (streaksByPlayer.get(p.id) || []).filter((x) => x.n >= 3);
   </section>
   <script is:inline>
     {
+      // « Voir plus » des face-à-face
+      const more = document.getElementById("h2h-more");
+      if (more) more.addEventListener("click", () => {
+        const hidden = document.querySelectorAll("#h2h details[hidden]");
+        const open = hidden.length > 0;
+        if (open) hidden.forEach((d) => { d.hidden = false; d.dataset.extra = "1"; });
+        else document.querySelectorAll('#h2h details[data-extra]').forEach((d) => { d.hidden = true; d.open = false; });
+        more.textContent = open ? "Voir moins" : `Voir plus (${more.dataset.n} autres adversaires)`;
+      });
+      // Sous-menu : collé sous la barre du site (dont la hauteur varie sur téléphone), surligne la section visible
+      const sub = document.querySelector(".subnav"), top = document.querySelector("nav.top");
+      const place = () => { if (sub && top) sub.style.top = top.offsetHeight + "px"; };
+      place(); addEventListener("resize", place);
+      const links = [...document.querySelectorAll(".subnav a")];
+      const io = new IntersectionObserver((entries) => {
+        for (const en of entries) if (en.isIntersecting) links.forEach((a) => { const on = a.hash === "#" + en.target.id; a.toggleAttribute("aria-current", on); if (on) a.parentElement.scrollTo({ left: a.offsetLeft - 16, behavior: "smooth" }); });
+      }, { rootMargin: "-120px 0px -60% 0px" });
+      links.forEach((a) => { const s = document.querySelector(a.hash); if (s) io.observe(s); });
       const seg = document.getElementById("seg");
       if (seg) {
         const cat = document.getElementById("cat"), rows = [...document.querySelectorAll("#res tbody tr")], ct = document.getElementById("count"), none = document.getElementById("none");
