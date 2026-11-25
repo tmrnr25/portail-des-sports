@@ -41,6 +41,11 @@ export const LOGO_BG = {
   "US Men's Clay Court Championship": "blanc",
   "U.S. Men's Clay Court Championship": "blanc",
   "Mifel Tennis Open": "blanc",
+  // Cyclisme
+  "Championnat d'Europe": "blanc",
+  "Championnat d'Europe CLM": "blanc",
+  "Championnat de France": "blanc",
+  "Championnat de France CLM": "blanc",
   "Croatia Open": "orange",
   "Delray Beach Open": "jaune",
   "Estoril Open": "#000000",
