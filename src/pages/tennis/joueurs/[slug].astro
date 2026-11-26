@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer, catHistoryText, surfaceRecord, h2hByPlayer, SURFACES } from "../../../lib/tennis.js";
+import { players, statsById, compById, playerById, slams, surf, catLabel, isGC, initials, url, ROLES, plural, featsByPlayer, streaksByPlayer, catHistoryText, surfaceRecord, h2hByPlayer, SURFACES, fsInfo } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return players.map((p) => ({ params: { slug: p.slug }, props: { p } }));
 }
@@ -216,7 +216,7 @@ const SUBNAV = [
                   <td><a href={url.comp(c)}>{c.name}</a>{e.name !== c.name && <><br /><small class="muted">{e.name}</small></>}</td>
                   <td>{catLabel(e.category)}</td>
                   <td><span class="chip"><i class="dot" style={`background:${S.color}`}></i>{S.label}</span></td>
-                  <td><span class={`pill ${r}`}>{r === "SF" && (e.b || []).includes(p.id) ? "Bronze" : r === "QF" && /finals/i.test(c.name) ? "Phase de groupe" : ROLES[r]}</span></td>
+                  <td><span class={`pill ${r}`}>{r === "SF" && (e.b || []).includes(p.id) ? "Bronze" : r === "QF" && /finals/i.test(c.name) ? "Phase de groupe" : ROLES[r]}</span>{(r === "V" || r === "F") && fsInfo(e) && <small class="fs" title={fsInfo(e).text}>{fsInfo(e).short}</small>}</td>
                   <td>{r === "V" ? <span class="muted">—</span> : e.v.map((id, i) => <>{i > 0 && ", "}<a href={url.player(playerById.get(id))}>{playerById.get(id).name}</a></>)}</td>
                 </tr>
               ); })}

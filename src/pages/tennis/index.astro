@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { compColor, competitions, editions, players, groupCompetitions, statsById, compById, playerById, surf, initials, url, plural } from "../../lib/tennis.js";
+import { compColor, competitions, editions, players, groupCompetitions, statsById, compById, playerById, surf, initials, url, plural, fsInfo } from "../../lib/tennis.js";
 const groups = groupCompetitions();
 const top = players.map((p) => ({ p, s: statsById.get(p.id) })).filter((x) => x.s.titles).sort((a, b) => b.s.gc - a.s.gc || b.s.titles - a.s.titles).slice(0, 10);
 const recent = editions.filter((e) => e.v.length).slice(0, 8);
@@ -29,7 +29,7 @@ const maxT = Math.max(1, ...top.map((x) => x.s.titles));
             {recent.map((e) => (
               <tr>
                 <td><a href={url.edition(e)}>{e.name} {e.year}</a></td>
-                <td>{e.v.map((id, i) => <>{i > 0 && ", "}<a href={url.player(playerById.get(id))}>{playerById.get(id).name}</a></>)}</td>
+                <td>{e.v.map((id, i) => <>{i > 0 && ", "}<a href={url.player(playerById.get(id))}>{playerById.get(id).name}</a></>)}{fsInfo(e) && <small class="fs" title={fsInfo(e).text}>{fsInfo(e).short}</small>}</td>
                 <td>{e.f.map((id, i) => <>{i > 0 && ", "}<a href={url.player(playerById.get(id))}>{playerById.get(id).name}</a></>)}</td>
               </tr>
             ))}

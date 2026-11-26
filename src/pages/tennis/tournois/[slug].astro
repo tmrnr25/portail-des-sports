@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { roundLabels, isOlympic, heroBg, competitions, editionsByComp, streaksByComp, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
+import { roundLabels, isOlympic, heroBg, competitions, editionsByComp, streaksByComp, fsInfo, playerById, surf, initials, url, plural } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return competitions.map((c) => ({ params: { slug: c.slug }, props: { c } }));
 }
@@ -135,7 +135,7 @@ const search = (e) => [e.year, ...[...e.v, ...e.f, ...e.sf, ...e.qf, ...e.r16].m
             <tr data-s={search(e)}>
               <td class="y"><a href={url.edition(e)}>{e.year}</a></td>
               {surfChanged && <td><span class="chip"><i class="dot" style={`background:${surf(e.surface || c.surface).color}`}></i>{surf(e.surface || c.surface).label}</span></td>}
-              {COLS.map(([k]) => <td>{e[k].map((id, i) => <>{i > 0 && <br />}{olympic && k === "v" && <i class="medal or" title="Médaille d'or"></i>}{olympic && k === "f" && <i class="medal argent" title="Médaille d'argent"></i>}{olympic && k === "sf" && (e.b || []).includes(id) && <i class="medal bronze" title="Médaille de bronze"></i>}<a href={url.player(P(id))}>{P(id).name}</a></>)}</td>)}
+              {COLS.map(([k]) => <td>{e[k].map((id, i) => <>{i > 0 && <br />}{olympic && k === "v" && <i class="medal or" title="Médaille d'or"></i>}{olympic && k === "f" && <i class="medal argent" title="Médaille d'argent"></i>}{olympic && k === "sf" && (e.b || []).includes(id) && <i class="medal bronze" title="Médaille de bronze"></i>}<a href={url.player(P(id))}>{P(id).name}</a></>)}{k === "v" && fsInfo(e) && <small class="fs" title={fsInfo(e).text}>{fsInfo(e).short}</small>}</td>)}
             </tr>
           ))}
         </tbody>

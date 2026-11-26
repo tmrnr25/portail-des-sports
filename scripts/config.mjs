@@ -17,6 +17,7 @@ export const COLS = {
     name: "Tournoi", date: "Date", surface: "Surface", category: "Catégorie", comp: "Compétitions Tennis",
     winner: "Vainqueur", finalist: "Finaliste", semi: "Demi-finaliste", quarter: "Quart de finaliste", r16: "1/8 de finaliste", place: "Lieu",
     bronze: "Médaille de bronze", // facultatif (Jeux olympiques)
+    finalStatus: "Statut finale", // facultatif : Non jouée, Abandon, Forfait, Disqualification
   },
   player: {
     name: "Joueurs", best: "Meilleur classement", retired: "Retraité", photo: "Photo", nationality: "Nationalité",

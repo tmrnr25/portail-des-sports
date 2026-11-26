@@ -231,9 +231,20 @@ function slamFeats(pid) {
 }
 export const featsByPlayer = new Map(players.map((p) => [p.id, slamFeats(p.id)]).filter(([, f]) => f.length));
 
+// ---------- Statut de la finale (colonne « Statut finale », facultative) ----------
+export const FINAL_STATUS = {
+  Abandon: { short: "ab.", label: "Abandon", text: "Finale gagnée sur abandon du finaliste" },
+  Forfait: { short: "w.o.", label: "Forfait", text: "Finale non disputée : forfait du finaliste" },
+  Disqualification: { short: "disq.", label: "Disqualification", text: "Finale gagnée sur disqualification du finaliste" },
+  "Non jouée": { short: "n.j.", label: "Non jouée", text: "Finale non jouée" },
+};
+export const fsInfo = (e) => (e?.fs ? FINAL_STATUS[e.fs] || { short: e.fs, label: e.fs, text: `Finale : ${e.fs}` } : null);
+// Une finale sans match (forfait, non jouée) ne compte pas dans les face-à-face
+export const finalPlayed = (e) => !["Forfait", "Non jouée"].includes(e.fs);
+
 // ---------- Face-à-face en finale ----------
-// Chaque finale avec un vainqueur et un finaliste uniques (finale olympique comprise)
-export const finals = editions.filter((e) => e.v.length === 1 && e.f.length === 1);
+// Chaque finale disputée avec un vainqueur et un finaliste uniques (finale olympique comprise)
+export const finals = editions.filter((e) => e.v.length === 1 && e.f.length === 1 && finalPlayed(e));
 export const h2hByPlayer = new Map(); // pid -> Map(adversaire -> { w, l, eds: [{ e, won }] })
 const addH2H = (a, b, e, won) => {
   if (!h2hByPlayer.has(a)) h2hByPlayer.set(a, new Map());

@@ -1,6 +1,6 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { roundLabels, isOlympic, isGroupStage, heroBg, editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate } from "../../../lib/tennis.js";
+import { roundLabels, isOlympic, isGroupStage, heroBg, editions, editionsByComp, compById, playerById, surf, catLabel, initials, url, frDate, fsInfo } from "../../../lib/tennis.js";
 export function getStaticPaths() {
   return editions.map((e) => ({ params: { slug: e.slug }, props: { e } }));
 }
@@ -16,6 +16,7 @@ const olympic = isOlympic(c);
 const bronze = new Set(e.b || []);
 const cols = [[RL.r16Col, e.r16, false, "r16"], [RL.qfCol, e.qf, false, "qf"], ["Demi-finales", e.sf, false, "sf"], [RL.fCol, e.f, false, "f"], [RL.vCol, e.v, true, "v"]].filter(([, ids, win]) => win || ids.length > 0);
 const medal = (k, id) => (!olympic ? null : k === "v" ? "or" : k === "f" ? "argent" : k === "sf" && bronze.has(id) ? "bronze" : null);
+const FS = fsInfo(e);
 const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)}` : `Le ${frDate(e.start, true)}`) : null;
 ---
 <Base title={`${c.name} ${e.year}`} nav="tournois" description={`Tableau final de ${c.name} ${e.year}.`}>
@@ -29,6 +30,7 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
         <div class="tags">
           {S.known && <span>{S.label}</span>}
           {e.category && <span>{catLabel(e.category)}</span>}
+          {FS && <span title={FS.text}>Finale : {FS.label.toLowerCase()}</span>}
           {e.name !== c.name && <span>Nom cette année-là : {e.name}</span>}
           <a href={url.comp(c)}>Toutes les éditions</a>
         </div>
@@ -50,6 +52,7 @@ const dates = e.start ? (e.end ? `Du ${frDate(e.start)} au ${frDate(e.end, true)
                 {medal(k, id) && <i class={`medal ${medal(k, id)}`} title={`Médaille ${medal(k, id) === "or" ? "d'or" : medal(k, id) === "argent" ? "d'argent" : "de bronze"}`} style="margin-left:auto"></i>}
               </div>
             ))}
+            {win && FS && <p class="fs-note">{FS.text}.</p>}
           </div>
         ))}
       </div>

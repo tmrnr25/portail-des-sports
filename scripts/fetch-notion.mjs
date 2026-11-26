@@ -102,7 +102,7 @@ const zones = rawZ.map((pg) => ({ id: pg.id, name: txt(prop(pg, COLS.zone.name))
       const d = dt(prop(pg, c.edition.date));
       return {
         id: pg.id, name: txt(prop(pg, c.edition.name)), start: d.start, end: d.end,
-        surface: sl(prop(pg, c.edition.surface)), category: sl(prop(pg, c.edition.category)),
+        surface: sl(prop(pg, c.edition.surface)), category: sl(prop(pg, c.edition.category)), finalStatus: sl(prop(pg, c.edition.finalStatus)),
         comp: rl(prop(pg, c.edition.comp)), winner: rl(prop(pg, c.edition.winner)),
         finalist: rl(prop(pg, c.edition.finalist)), semi: rl(prop(pg, c.edition.semi)),
         quarter: rl(prop(pg, c.edition.quarter)), r16: rl(prop(pg, c.edition.r16)), bronze: rl(prop(pg, c.edition.bronze)),
